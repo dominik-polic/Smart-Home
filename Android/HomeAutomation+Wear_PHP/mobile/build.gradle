@@ -1,0 +1,39 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion '26.0.1'
+    defaultConfig {
+        applicationId "org.no_ip.wqwdpxd.homeautomationwear_php"
+        minSdkVersion 21
+        targetSdkVersion 26
+        versionCode 26
+        versionName "1.6.1"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    wearApp project(':wear')
+    compile 'com.google.android.gms:play-services:9.6.1'
+    compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.android.support:design:24.2.1'
+    compile 'com.github.rtugeek:ColorSeekBar:1.0.2'
+    compile 'me.priyesh:chroma:1.0.2'
+    compile 'com.google.android.gms:play-services:5.0.+@aar'
+    compile 'com.android.support:support-v4:24.0.+'
+    compile 'com.github.yukuku:ambilwarna:2.0.1'
+    wearApp project(':wear')
+    testCompile 'junit:junit:4.12'
+}

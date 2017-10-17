@@ -1,0 +1,42 @@
+<resources>
+    <string name="app_name">Home Remote Control</string>
+    <string name="title_activity_login">Sign in</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="logs_shortcut_short_label1">Logs</string>
+    <string name="logs_shortcut_long_label1">Show logs</string>
+    <string name="logs_disabled_message1">Please login to show logs</string>
+    <string name="control_shortcut_short_label1">Controls</string>
+    <string name="control_shortcut_long_label1">Show controls</string>
+    <string name="control_disabled_message1">Please login to show controls</string>
+    <string name="camera_shortcut_short_label1">Cameras</string>
+    <string name="camera_shortcut_long_label1">Show camera feed</string>
+    <string name="camera_disabled_message1">Please login to show cameras</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+
+    <!--Navigation Drawer-->
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+
+
+    <string-array name="modes_array">
+        <item>Disabled</item>
+        <item>Manual Color</item>
+        <item>RGB Fade</item>
+        <item>RGB Blink</item>
+        <item>White Fade</item>
+        <item>Music Blink</item>
+    </string-array>
+    <string name="title_activity_logs">Logs</string>
+
+</resources>

@@ -1,0 +1,33 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=
+        ".MenuExampleActivity" >
+    <item
+        android:id="@+id/menu_logout"
+        android:orderInCategory="1"
+        app:showAsAction="never"
+        android:title="Log Out"/>
+    <item
+        android:id="@+id/menu_about"
+        android:orderInCategory="5"
+        app:showAsAction="never"
+        android:title="About"/>
+    <item
+        android:id="@+id/menu_reload"
+        android:orderInCategory="4"
+        app:showAsAction="never"
+        android:title="Reload Status"/>
+    <item android:id="@+id/menu_LAN"
+        android:titleCondensed="Persist"
+        android:orderInCategory="2"
+        android:title="Use LAN IP"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:checkable="true" />
+    <item android:id="@+id/menu_LAN_AUTO"
+        android:titleCondensed="Persist"
+        android:orderInCategory="3"
+        android:title="Automatic IP"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:checkable="true" />
+</menu>

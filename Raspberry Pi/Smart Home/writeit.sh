@@ -1,0 +1,1 @@
+echo `date +%H-%M-%S` [$2] $1 >> logs/log_`date +%Y-%m-%d`.txt

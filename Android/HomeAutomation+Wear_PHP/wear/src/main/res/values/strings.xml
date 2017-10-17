@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">"Home Remote"</string>
+
+    <string-array name="modes_array">
+        <item>Disabled</item>
+        <item>Manual Color</item>
+        <item>RGB Fade</item>
+        <item>RGB Blink</item>
+        <item>White Fade</item>
+        <item>Music Blink</item>
+    </string-array>
+</resources>
