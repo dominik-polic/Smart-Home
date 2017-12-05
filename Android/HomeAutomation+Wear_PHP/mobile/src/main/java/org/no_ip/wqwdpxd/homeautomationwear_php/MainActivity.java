@@ -528,7 +528,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 displayToast("Already running, try later!");
             }
         }else{
-            displayToast("No internet connection!");
+            displayToast("No internet!");
         }
 
     }
