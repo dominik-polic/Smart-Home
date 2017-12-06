@@ -2,28 +2,20 @@ package org.no_ip.wqwdpxd.homeautomationwear_php;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.Activity;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ShortcutInfo;
-import android.content.pm.ShortcutManager;
-import android.graphics.drawable.Icon;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
-
 import android.content.CursorLoader;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.KeyEvent;
@@ -38,46 +30,33 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.Manifest.permission.READ_CONTACTS;
 
-/**
- * A login screen that offers login via email/password.
- */
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
 
-    private String prefs = getString(R.string.prefs);
-    private String localWiFi = getString(R.string.localWiFi);
-    private String localIP = getString(R.string.local_IP);
-    private String wanIP = getString(R.string.wan_IP);
-    private String user1 = getString(R.string.user1);
-    private String user2 = getString(R.string.user2);
-    private String user3 = getString(R.string.user3);
-    private String user4 = getString(R.string.user4);
-    private String user5 = getString(R.string.user5);
-    private String user6 = getString(R.string.user6);
-    private String user1_login = getString(R.string.user1_login);
-    private String user2_login = getString(R.string.user2_login);
-    private String user3_login = getString(R.string.user3_login);
-    private String user4_login = getString(R.string.user4_login);
-    private String user5_login = getString(R.string.user5_login);
-    private String user6_login = getString(R.string.user6_login);
+    String prefs;
+    String localWiFi;
+    String localIP;
+    String wanIP;
+    String user1;
+    String user2;
+    String user3;
+    String user4;
+    String user5;
+    String user6;
+    String user1_login;
+    String user2_login;
+    String user3_login;
+    String user4_login;
+    String user5_login;
+    String user6_login;
 
-    /**
-     * Id to identity READ_CONTACTS permission request.
-     */
-    private static final int REQUEST_READ_CONTACTS = 0;
 
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private final String[] DUMMY_CREDENTIALS = new String[]{
-            user1_login,user2_login, user3_login,user4_login,user5_login,user6_login
-    };
+
+
+    String[] DUMMY_CREDENTIALS;
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -95,7 +74,29 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+
+        prefs = getResources().getString(R.string.prefs);
+        localWiFi = getResources().getString(R.string.localWiFi);
+        localIP = getResources().getString(R.string.local_IP);
+        wanIP = getResources().getString(R.string.wan_IP);
+        user1 = getResources().getString(R.string.user1);
+        user2 = getResources().getString(R.string.user2);
+        user3 = getResources().getString(R.string.user3);
+        user4 = getResources().getString(R.string.user4);
+        user5 = getResources().getString(R.string.user5);
+        user6 = getResources().getString(R.string.user6);
+        user1_login = getResources().getString(R.string.user1_login);
+        user2_login = getResources().getString(R.string.user2_login);
+        user3_login = getResources().getString(R.string.user3_login);
+        user4_login = getResources().getString(R.string.user4_login);
+        user5_login = getResources().getString(R.string.user5_login);
+        user6_login = getResources().getString(R.string.user6_login);
+
+        DUMMY_CREDENTIALS = new String[]{
+                user1_login,user2_login, user3_login,user4_login,user5_login,user6_login
+        };
+
+        Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
         myToolbar.setTitleTextColor(0xFFFFFFFF);
 
@@ -105,10 +106,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorLoginShade));
 
         // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        mEmailView = findViewById(R.id.email);
         populateAutoComplete();
-        rememberLogin = (CheckBox) findViewById(R.id.rememberLogin);
-        mPasswordView = (EditText) findViewById(R.id.password);
+        rememberLogin = findViewById(R.id.rememberLogin);
+        mPasswordView = findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -120,7 +121,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
         });
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+        Button mEmailSignInButton = findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -144,9 +145,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         return false;
     }
 
-    /**
-     * Callback received when a permissions request has been completed.
-     */
 
 
 
@@ -203,12 +201,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
         return email.contains("@");
     }
 
     private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
         return password.length() > 4;
     }
 
@@ -220,32 +216,25 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+        int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mLoginFormView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
+        mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+        mLoginFormView.animate().setDuration(shortAnimTime).alpha(
+                show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+            }
+        });
 
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
+        mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+        mProgressView.animate().setDuration(shortAnimTime).alpha(
+                show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            }
+        });
     }
 
     @Override
@@ -299,13 +288,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         };
 
         int ADDRESS = 0;
-        int IS_PRIMARY = 1;
     }
 
     /**
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
+    @SuppressLint("StaticFieldLeak")
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
         private final String mEmail;
@@ -318,7 +307,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
 
             for (String credential : DUMMY_CREDENTIALS) {
                 String[] pieces = credential.split(":");
@@ -332,7 +320,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 }
             }
 
-            // TODO: register the new account here.
+
             return false;
         }
 
@@ -345,7 +333,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                 finish();
                 if(rememberLogin.isChecked()) {
-                    updateLogin(true,loguserid);
+                    updateLogin(loguserid);
                 }
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
@@ -358,13 +346,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mAuthTask = null;
             showProgress(false);
         }
-        public void updateLogin(boolean success, String userid) {
+        void updateLogin(String userid) {
 
             SharedPreferences pref = getSharedPreferences(prefs, 0); // 0 - for private mode
             SharedPreferences.Editor editor = pref.edit();
-            editor.putBoolean("login", success);
+            editor.putBoolean("login", true);
             editor.putString("username", userid);
-            editor.commit();
+            editor.apply();
 
 
         }

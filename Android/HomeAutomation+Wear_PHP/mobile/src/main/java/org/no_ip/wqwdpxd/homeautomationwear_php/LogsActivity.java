@@ -1,5 +1,6 @@
 package org.no_ip.wqwdpxd.homeautomationwear_php;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,15 +11,12 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -28,37 +26,38 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
 public class LogsActivity extends AppCompatActivity {
 
-    private String prefs = getString(R.string.prefs);
-    private String localWiFi = getString(R.string.localWiFi);
-    private String localIP = getString(R.string.local_IP);
-    private String wanIP = getString(R.string.wan_IP);
-    private String user1 = getString(R.string.user1);
-    
+    String prefs;
+    String localIP;
+    String wanIP;
+
+
     boolean logOpen=false;
-    ArrayList<String> logList = new ArrayList<String>();
+    ArrayList<String> logList = new ArrayList<>();
     private ListView mLogList;
-    private ArrayAdapter<String> mLogAdapter;
     SharedPreferences pref;
     SharedPreferences.Editor editor;
     public String serverIP;
     public String serverIP_AUTO;
     public String user="Unknown";
     private ListView mDrawerList;
-    private ArrayAdapter<String> mAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
 
+    @SuppressLint("CommitPrefEdits")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_logs);
+
+        prefs = getResources().getString(R.string.prefs);
+        localIP = getResources().getString(R.string.local_IP);
+        wanIP = getResources().getString(R.string.wan_IP);
 
         pref = getApplicationContext().getSharedPreferences(prefs, 0); // 0 - for private mode
         editor = pref.edit();
@@ -72,11 +71,11 @@ public class LogsActivity extends AppCompatActivity {
         user=pref.getString("username","Unknown");
         serverIP=pref.getString("server_ip",localIP);
         serverIP_AUTO=pref.getString("server_ip_auto",localIP);
-        mLogList = (ListView)findViewById(R.id.logList);
-        mDrawerList = (ListView)findViewById(R.id.navList2);
+        mLogList = findViewById(R.id.logList);
+        mDrawerList = findViewById(R.id.navList2);
 
 
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar myToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(myToolbar);
         myToolbar.setTitleTextColor(0xFFFFFFFF);
         Window window = this.getWindow();
@@ -85,7 +84,7 @@ public class LogsActivity extends AppCompatActivity {
         window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorAppLogsShade));
 
 
-        mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
 
         getLogs();
         //addLogItems();
@@ -134,7 +133,7 @@ public class LogsActivity extends AppCompatActivity {
                 }else if(!logOpen) {
                     String logname = "log_" + mLogList.getItemAtPosition(position) + ".txt";
                     //displayToast(logname);
-                    getSupportActionBar().setTitle("Logs: " + mLogList.getItemAtPosition(position));
+                    if(getSupportActionBar()!=null) getSupportActionBar().setTitle("Logs: " + mLogList.getItemAtPosition(position));
                     logList.clear();
                     getLog(logname);
                     logOpen = true;
@@ -142,9 +141,10 @@ public class LogsActivity extends AppCompatActivity {
             }
         });
 
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+        if(getSupportActionBar()!=null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
     }
 
     @Override
@@ -163,14 +163,15 @@ public class LogsActivity extends AppCompatActivity {
     }
 
     public void addLogItems() {
-if(logList.size()==0){
+        ArrayAdapter<String> mLogAdapter;
+        if(logList.size()==0){
     logOpen=false;
     String[] logRetry ={"Reload Logs"};
-    mLogAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, logRetry);
+    mLogAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, logRetry);
 }else {
     String[] logArray = new String[logList.size()];
     for (int i = 0; i < logList.size(); i++) {
-        logArray[i] = logList.get(i).toString();
+        logArray[i] = logList.get(i);
     }
 
     String[] logNameArray = new String[logList.size()];
@@ -179,9 +180,9 @@ if(logList.size()==0){
     }
 
     if (!logOpen)
-        mLogAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, logNameArray);
+        mLogAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, logNameArray);
     else
-        mLogAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, logArray);
+        mLogAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, logArray);
 }
 
     mLogList.setAdapter(mLogAdapter);
@@ -214,19 +215,20 @@ if(logList.size()==0){
         ConnectivityManager cm =
                 (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        boolean isConnected = activeNetwork != null &&
+        NetworkInfo activeNetwork = null;
+        if (cm != null) {
+            activeNetwork = cm.getActiveNetworkInfo();
+        }
+
+
+        return activeNetwork != null &&
                 activeNetwork.isConnectedOrConnecting();
-
-
-        return isConnected;
     }
     public void displayToast(String text2){
         Context context = getApplicationContext();
-        CharSequence text = text2;
         int duration = Toast.LENGTH_SHORT;
 
-        Toast toast = Toast.makeText(context, text, duration);
+        Toast toast = Toast.makeText(context, text2, duration);
         toast.show();
     }
 
@@ -235,14 +237,15 @@ if(logList.size()==0){
         if(logOpen) {
             logOpen=false;
             logList.clear();
-            getSupportActionBar().setTitle("Logs");
+            if(getSupportActionBar()!=null)
+                getSupportActionBar().setTitle("Logs");
             getLogs();
         }
     }
 
     private void addDrawerItems() {
         String[] osArray = { "Controls","Logs","Cameras" };
-        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
+        ArrayAdapter<String> mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
     }
 
@@ -267,7 +270,7 @@ if(logList.size()==0){
         };
 
         mDrawerToggle.setDrawerIndicatorEnabled(true);
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
 
 
     }
@@ -279,7 +282,7 @@ if(logList.size()==0){
         }
         switch (item.getItemId()) {
             case R.id.menu_logout:
-                updateLogin(false,"Not_important");
+                updateLogin();
                 return true;
 
             case R.id.menu_about:
@@ -312,18 +315,21 @@ if(logList.size()==0){
                 return true;
 
             case R.id.menu_LAN_AUTO:
-                serverIP_AUTO=pref.getString("server_ip_auto","true");
-                if(serverIP_AUTO.equals("false")) {
-                    item.setChecked(true);
-                    serverIP_AUTO="true";
-                    editor.putString("server_ip_auto","true");
-                }else {
-                    serverIP_AUTO="false";
-                    item.setChecked(false);
-                    editor.putString("server_ip_auto","false");
+                if (android.os.Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    displayToast("Please grant location permission...");
+                } else{
+                    serverIP_AUTO=pref.getString("server_ip_auto","true");
+                    if(serverIP_AUTO.equals("false")) {
+                        item.setChecked(true);
+                        serverIP_AUTO="true";
+                        editor.putString("server_ip_auto","true");
+                    }else {
+                        serverIP_AUTO="false";
+                        item.setChecked(false);
+                        editor.putString("server_ip_auto","false");
+                    }
+                    editor.commit();
                 }
-                editor.commit();
-
                 return true;
 
             case android.R.id.home:
@@ -342,18 +348,16 @@ if(logList.size()==0){
 
     }
 
-    public void updateLogin(boolean success, String userid){
+    public void updateLogin(){
 
         SharedPreferences pref = getSharedPreferences(prefs, 0); // 0 - for private mode
         SharedPreferences.Editor editor = pref.edit();
-        editor.putBoolean("login",success);
-        editor.putString("username",userid);
-        editor.commit();
+        editor.putBoolean("login", false);
+        editor.putString("username", "Not_important");
+        editor.apply();
 
-        if(!success){
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-        }
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
 
 
     }

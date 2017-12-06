@@ -1,44 +1,30 @@
 package org.no_ip.wqwdpxd.homeautomationwear_php;
 
+import android.annotation.SuppressLint;
 import android.os.AsyncTask;
-import android.widget.Toast;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StreamCorruptedException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Timer;
-import java.util.TimerTask;
 
-/**
- * Created by Dominik on 14.11.2016..
- */
 
 
 
 public class SendCommand extends AsyncTask<String, String, String> {
 
-   private String localIP = "192.168.1.20";
 
-
-    public String parentActivity="MainActivity";
-    public boolean retriable = false;
-    public String porukica = "";
-    public String korisnik = "";
-    public String phpReturned;
-    public MainActivity activity;
-    public SendCommand(MainActivity a) {
+    private String parentActivity="MainActivity";
+    private String phpReturned;
+    @SuppressLint("StaticFieldLeak")
+    private MainActivity activity;
+    SendCommand(MainActivity a) {
         this.activity = a;
     }
 
-    public ListenerService activity2;
-    public SendCommand(ListenerService a) {
-        this.activity2 = a;
+    SendCommand() {
     }
 
     protected String doInBackground(String... message) {
@@ -49,22 +35,26 @@ public class SendCommand extends AsyncTask<String, String, String> {
 
         URL url = null;
         String urltext="http://"+message[2]+"/writer_mysql.php?"+message[0]+"&user="+message[1];
-        if(message[2].equals(localIP))
-            retriable=true;
+        String localIP = "192.168.1.20";
         try {
 
             url = new URL(urltext);
-            porukica=message[0];
-            korisnik=message[1];
         } catch (MalformedURLException e) {
             e.printStackTrace();
             result=e.toString();
         }
         HttpURLConnection urlConnection = null;
         try {
-            urlConnection = (HttpURLConnection) url.openConnection();
-            if(message[2].equals(localIP))urlConnection.setConnectTimeout(1000);
-            else urlConnection.setConnectTimeout(3000);
+            urlConnection = (HttpURLConnection) (url != null ? url.openConnection() : null);
+            if(message[2].equals(localIP)) {
+                if (urlConnection != null) {
+                    urlConnection.setConnectTimeout(1000);
+                }
+            }else{
+                if (urlConnection != null) {
+                    urlConnection.setConnectTimeout(3000);
+                }
+            }
         } catch (java.net.SocketTimeoutException e) {
             result="ERR: Timeout on LAN";
         } catch (IOException e) {
@@ -72,23 +62,32 @@ public class SendCommand extends AsyncTask<String, String, String> {
             result=e.toString();
         }
         try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(
-                    urlConnection.getInputStream()));
+            BufferedReader in = null;
+            if (urlConnection != null) {
+                in = new BufferedReader(new InputStreamReader(
+                        urlConnection.getInputStream()));
+            }
             String inputLine;
             boolean first=true;
-            while ((inputLine = in.readLine()) != null)
-                if(first) {
-                    phpReturned = inputLine;
-                    first=false;
-                }
+            if (in != null) {
+                while ((inputLine = in.readLine()) != null)
+                    if(first) {
+                        phpReturned = inputLine;
+                        first=false;
+                    }
+            }
             if(!phpReturned.equals("Success"))
                 result="PHP Error";
-            in.close();
+            if (in != null) {
+                in.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
             result=e.toString();
         } finally {
-            urlConnection.disconnect();
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
         }
 
         return result;

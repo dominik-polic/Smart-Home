@@ -3,29 +3,18 @@ package org.no_ip.wqwdpxd.homeautomationwear_php;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
-import android.support.wearable.view.BoxInsetLayout;
-import android.support.wearable.view.WatchViewStub;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.SeekBar;
 import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
-import com.google.android.gms.wearable.WearableStatusCodes;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends WearableActivity implements AdapterView.OnItemSelectedListener {
@@ -34,13 +23,6 @@ public class MainActivity extends WearableActivity implements AdapterView.OnItem
 
     private GoogleApiClient client;
     private String nodeId;
-    private Spinner spinner;
-    private SeekBar vskbBrightnessRGB;
-    private SeekBar vskbBrightnesMaster;
-    private SeekBar vskbSpeedRGB;
-    private GoogleApiClient mGoogleApiClient;
-
-    private BoxInsetLayout mContainerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,11 +31,10 @@ public class MainActivity extends WearableActivity implements AdapterView.OnItem
 
         setAmbientEnabled();
         initApi();
-        spinner = (Spinner) findViewById(R.id.spinner);
-        mContainerView = (BoxInsetLayout) findViewById(R.id.container);
-        vskbBrightnesMaster = (SeekBar) findViewById(R.id.skbBrightnessMaster);
-        vskbBrightnessRGB = (SeekBar) findViewById(R.id.skbBrightnessRGB);
-        vskbSpeedRGB = (SeekBar) findViewById(R.id.skbSpeedRGB);
+        Spinner spinner = findViewById(R.id.spinner);
+        SeekBar vskbBrightnesMaster = findViewById(R.id.skbBrightnessMaster);
+        SeekBar vskbBrightnessRGB = findViewById(R.id.skbBrightnessRGB);
+        SeekBar vskbSpeedRGB = findViewById(R.id.skbSpeedRGB);
 
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(MainActivity.this,
@@ -162,7 +143,6 @@ public class MainActivity extends WearableActivity implements AdapterView.OnItem
     private void updateDisplay() {
         if (isAmbient()) {
             finish();
-        } else {
         }
     }
 
@@ -200,26 +180,6 @@ public class MainActivity extends WearableActivity implements AdapterView.OnItem
     }
     public void onBellRing(View target) {
         sendToast("node=bell&action=pulse");
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-    public void displayToast(String text2){
-        Context context = getApplicationContext();
-        CharSequence text = text2;
-        int duration = Toast.LENGTH_SHORT;
-
-        Toast toast = Toast.makeText(context, text, duration);
-        toast.show();
     }
 
 

@@ -38,5 +38,34 @@
         <item>Music Blink</item>
     </string-array>
     <string name="title_activity_logs">Logs</string>
+    <string name="gates">Gates</string>
+    <string name="close_car_gate">Close Car Gate</string>
+    <string name="open_car_gate">Open Car gate</string>
+    <string name="open_small_gate">Open Small Gate</string>
+    <string name="lights_in_my_room">Lights in my room</string>
+    <string name="lights_off">Lights Off</string>
+    <string name="lights_on">Lights On</string>
+    <string name="brightness_lower">Brightness -</string>
+    <string name="brightness_higher">Brightness +</string>
+    <string name="doors">Doors</string>
+    <string name="lock_house_door">Lock House Door</string>
+    <string name="unlock_house_door">Unlock House Door</string>
+    <string name="lock_room_door">Lock Room Door</string>
+    <string name="unlock_room_door">Unlock Room Door</string>
+    <string name="rgb_lights_settings_control">RGB Lights Settings Control</string>
+    <string name="mode">Mode</string>
+    <string name="bright_low">Bright-</string>
+    <string name="remote">Remote</string>
+    <string name="bright_high">Bright+</string>
+    <string name="rgb_color_picker">RGB Color Picker</string>
+    <string name="color_picker">Color Picker</string>
+    <string name="light_brightness">Light Brightness</string>
+    <string name="rgb_brightness">RGB Brightness</string>
+    <string name="rgb_speed">RGB Speed</string>
+    <string name="administrative_options">Administrative options</string>
+    <string name="test_led">Test LED</string>
+    <string name="ring_a_bell">Ring a Bell</string>
+    <string name="stop_server">Stop Server</string>
+    <string name="reset_arduino">Reset Arduino</string>
 
 </resources>

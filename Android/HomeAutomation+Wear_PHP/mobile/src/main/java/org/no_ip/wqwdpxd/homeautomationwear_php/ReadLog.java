@@ -1,5 +1,6 @@
 package org.no_ip.wqwdpxd.homeautomationwear_php;
 
+import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 
 import java.io.BufferedReader;
@@ -9,19 +10,17 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-/**
- * Created by Dominik on 23.11.2016..
- */
-
 public class ReadLog extends AsyncTask<String, String, String> {
 
-    boolean isMainActivity=false;
-    public LogsActivity activityLogs;
-    public ReadLog(LogsActivity a) {
+    private boolean isMainActivity=false;
+    @SuppressLint("StaticFieldLeak")
+    private LogsActivity activityLogs;
+    ReadLog(LogsActivity a) {
         this.activityLogs = a;
     }
-    public MainActivity activityMain;
-    public ReadLog(MainActivity b) {
+    @SuppressLint("StaticFieldLeak")
+    private MainActivity activityMain;
+    ReadLog(MainActivity b) {
         this.activityMain = b;
     }
 
@@ -36,7 +35,7 @@ public class ReadLog extends AsyncTask<String, String, String> {
             isMainActivity=true;
 
         URL url = null;
-        String urltext="";
+        String urltext;
         if(getLogs)
              urltext = "http://" + link + "/logs/list_all.php?user=" + user;
         else if(!isMainActivity)
@@ -53,8 +52,12 @@ public class ReadLog extends AsyncTask<String, String, String> {
             }
             HttpURLConnection urlConnection = null;
             try {
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setConnectTimeout(3000);
+                if (url != null) {
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                }
+                if (urlConnection != null) {
+                    urlConnection.setConnectTimeout(3000);
+                }
             } catch (java.net.SocketTimeoutException e) {
                 result = "ERR: Timeout";
             } catch (IOException e) {
@@ -62,28 +65,37 @@ public class ReadLog extends AsyncTask<String, String, String> {
                 result = e.toString();
             }
             try {
-                BufferedReader in = new BufferedReader(new InputStreamReader(
-                        urlConnection.getInputStream()));
+                BufferedReader in = null;
+                if (urlConnection != null) {
+                    in = new BufferedReader(new InputStreamReader(
+                            urlConnection.getInputStream()));
+                }
                 String inputLine;
-                while ((inputLine = in.readLine()) != null){
-                    if(inputLine.equals("-START-"))
-                        result="Got Status";
-                        if(inputLine.equals("Success")||inputLine.equals("-START-"))
-                            phpReturned="Success";
-                        else if(!isMainActivity)
-                            activityLogs.addLog(inputLine);
-                        else
-                            activityMain.addStatusLine(inputLine);
+                if (in != null) {
+                    while ((inputLine = in.readLine()) != null){
+                        if(inputLine.equals("-START-"))
+                            result="Got Status";
+                            if(inputLine.equals("Success")||inputLine.equals("-START-"))
+                                phpReturned="Success";
+                            else if(!isMainActivity)
+                                activityLogs.addLog(inputLine);
+                            else
+                                activityMain.addStatusLine(inputLine);
 
-                    }
+                        }
+                }
                 if(!phpReturned.equals("Success")&&getLogs)
                     result="PHP Error";
-                in.close();
+                if (in != null) {
+                    in.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 result=e.toString();
             } finally {
-                urlConnection.disconnect();
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
             }
 
 

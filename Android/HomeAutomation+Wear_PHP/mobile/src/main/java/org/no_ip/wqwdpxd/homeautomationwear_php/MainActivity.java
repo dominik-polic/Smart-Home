@@ -12,6 +12,8 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -33,28 +35,19 @@ import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Toast;
-
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.MessageEvent;
-import com.google.android.gms.wearable.Wearable;
-import com.google.android.gms.wearable.WearableListenerService;
-
 import java.util.Timer;
 import java.util.TimerTask;
-
-import me.priyesh.chroma.ChromaDialog;
-import me.priyesh.chroma.ColorMode;
-import me.priyesh.chroma.ColorSelectListener;
 import yuku.ambilwarna.AmbilWarnaDialog;
 
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener, ActivityCompat.OnRequestPermissionsResultCallback {
+
+    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 32501;
+
     //Navigation Drawer
     private ListView mDrawerList;
-    private ArrayAdapter<String> mAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
-    private String mActivityTitle;
 
     public int firstrgb=0;
     public String serverIP;
@@ -90,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     SharedPreferences.Editor editor;
 
 
-    //Staus values BEGIN-----------
+    //Status values BEGIN-----------
     public boolean x_lightson=false;
     public boolean x_gate2locked=false;
     public boolean x_doorhouselocked=false;
@@ -105,13 +98,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //Status values END------------
 
 
-    private String prefs = getString(R.string.prefs);
-    private String localWiFi = getString(R.string.localWiFi);
-    private String localIP = getString(R.string.local_IP);
-    private String wanIP = getString(R.string.wan_IP);
+    String prefs;
+    String localWiFi;
+    String localIP;
+    String wanIP;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+
+
+
+        prefs = getResources().getString(R.string.prefs);
+        localWiFi = getResources().getString(R.string.localWiFi);
+        localIP = getResources().getString(R.string.local_IP);
+        wanIP = getResources().getString(R.string.wan_IP);
 
         //Get the IP!
 
@@ -123,68 +128,62 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         if(serverIP_AUTO.equals("true")){
 
-            WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-            String wifiname=wifiInfo.getSSID();
+
+            Log.d("WIFI","About to check wifi");
+
+            String wifiname=getWifiName();
+
+            Log.d("WIFI","Wifi name: "+wifiname);
             if (("\""+localWiFi+"\"").equals(wifiname)) {
                 serverIP = localIP;
             } else {
                 serverIP=wanIP;
             }
             editor.putString("server_ip",serverIP);
-            editor.commit();
+            editor.apply();
         }else{
 
             serverIP = pref.getString("server_ip", localIP);
         }
 
 
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
 
 
 
+        vbtnLightsOn = findViewById(R.id.btnLightsOn);
+        vbtnLightsOff = findViewById(R.id.btnLightsOff);
+        vbtnGate2Open = findViewById(R.id.btnGate2Open);
+        vbtnGate2Close = findViewById(R.id.btnGate2Close);
+        vbtnTestConnection = findViewById(R.id.btnTestConnection);
+        vbtnRGBRemote = findViewById(R.id.btnRGBRemote);
+        vbtnDoorLock = findViewById(R.id.btnDoorLock);
+        vbtnDoorUnlock = findViewById(R.id.btnDoorUnlock);
+        vbtnDoorHouseLock = findViewById(R.id.btnDoorHouseLock);
+        vbtnDoorHouseUnlock = findViewById(R.id.btnDoorHouseUnlock);
+        vbtnBellRing = findViewById(R.id.btnBellRing);
+        vbtnBrightnessRGBIncrease = findViewById(R.id.btnBrightnessRGBIncrease);
+        vbtnBrightnessRGBDecrease = findViewById(R.id.btnBrightnessRGBDecrease);
+        vbtnBrightnessMasterIncrease = findViewById(R.id.btnBrightnessMasterIncrease);
+        vbtnBrightnessMasterDecrease = findViewById(R.id.btnBrightnessMasterDecrease);
+        vbtnResetArduino = findViewById(R.id.btnResetArduino);
+        vbtnStopServer = findViewById(R.id.btnStopServer);
+        vbtnGate1ShortOpen = findViewById(R.id.btnGate1ShortOpen);
+        vbtnPickColor = findViewById(R.id.btnPickColor);
 
+        vskbBrightnesMaster = findViewById(R.id.skbBrightnessMaster);
+        vskbBrightnessRGB = findViewById(R.id.skbBrightnessRGB);
+        vskbSpeedRGB = findViewById(R.id.skbSpeedRGB);
 
-
-
-
-
-        vbtnLightsOn = (Button) findViewById(R.id.btnLightsOn);
-        vbtnLightsOff = (Button) findViewById(R.id.btnLightsOff);
-        vbtnGate2Open = (Button) findViewById(R.id.btnGate2Open);
-        vbtnGate2Close = (Button) findViewById(R.id.btnGate2Close);
-        vbtnTestConnection = (Button) findViewById(R.id.btnTestConnection);
-        vbtnRGBRemote = (Button) findViewById(R.id.btnRGBRemote);
-        vbtnDoorLock = (Button) findViewById(R.id.btnDoorLock);
-        vbtnDoorUnlock = (Button) findViewById(R.id.btnDoorUnlock);
-        vbtnDoorHouseLock = (Button) findViewById(R.id.btnDoorHouseLock);
-        vbtnDoorHouseUnlock = (Button) findViewById(R.id.btnDoorHouseUnlock);
-        vbtnBellRing = (Button) findViewById(R.id.btnBellRing);
-        vbtnBrightnessRGBIncrease = (Button) findViewById(R.id.btnBrightnessRGBIncrease);
-        vbtnBrightnessRGBDecrease = (Button) findViewById(R.id.btnBrightnessRGBDecrease);
-        vbtnBrightnessMasterIncrease = (Button) findViewById(R.id.btnBrightnessMasterIncrease);
-        vbtnBrightnessMasterDecrease = (Button) findViewById(R.id.btnBrightnessMasterDecrease);
-        vbtnResetArduino = (Button) findViewById(R.id.btnResetArduino);
-        vbtnStopServer = (Button) findViewById(R.id.btnStopServer);
-        vbtnGate1ShortOpen = (Button) findViewById(R.id.btnGate1ShortOpen);
-        vbtnPickColor = (Button) findViewById(R.id.btnPickColor);
-
-        vskbBrightnesMaster = (SeekBar) findViewById(R.id.skbBrightnessMaster);
-        vskbBrightnessRGB = (SeekBar) findViewById(R.id.skbBrightnessRGB);
-        vskbSpeedRGB = (SeekBar) findViewById(R.id.skbSpeedRGB);
-
-        spinner = (Spinner) findViewById(R.id.spinner);
+        spinner = findViewById(R.id.spinner);
 
 
         //Navigation Drawer
-        mDrawerList = (ListView)findViewById(R.id.navList);
-        mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
-        mActivityTitle = getTitle().toString();
+        mDrawerList = findViewById(R.id.navList);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
 
 
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
         myToolbar.setTitleTextColor(0xFFFFFFFF);
         Window window = this.getWindow();
@@ -222,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             @Override
             public void onClick(View v) {
 
-                openDialog(false);
+                openDialog();
 
 
                 /*
@@ -439,10 +438,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 sendCommand("node=rgbspeed_dominik&action="+(speed3),user,serverIP);
             }
         });
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
-
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
 
         //Navigation Drawer
         addDrawerItems();
@@ -524,11 +523,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             if(!Global.SendCommand_running) {
                 Global.SendCommand_running=true;
                 new SendCommand(this).execute(send_text, user, lanwan, "MainActivity");
-            }else{
-                displayToast("Already running, try later!");
             }
         }else{
-            displayToast("No internet!");
+            displayToast("No network");
         }
 
     }
@@ -539,16 +536,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         ConnectivityManager cm =
                 (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        boolean isConnected = activeNetwork != null &&
-                activeNetwork.isConnectedOrConnecting();
+        NetworkInfo activeNetwork = null;
+        if (cm != null) {
+            activeNetwork = cm.getActiveNetworkInfo();
+        }
 
 
-        return isConnected;
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
-    void openDialog(boolean supportsAlpha) {
-        AmbilWarnaDialog dialog = new AmbilWarnaDialog(MainActivity.this, startingcolor, supportsAlpha, new AmbilWarnaDialog.OnAmbilWarnaListener() {
+    void openDialog() {
+        AmbilWarnaDialog dialog = new AmbilWarnaDialog(MainActivity.this, startingcolor, false, new AmbilWarnaDialog.OnAmbilWarnaListener() {
             @Override
             public void onOk(AmbilWarnaDialog dialog, int color) {
                 MainActivity.this.startingcolor = color;
@@ -566,12 +564,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     public void displayToast(String text2){
-        Context context = getApplicationContext();
-        CharSequence text = text2;
-        int duration = Toast.LENGTH_SHORT;
+        try {
+            Context context = getApplicationContext();
+            int duration = Toast.LENGTH_SHORT;
 
-        Toast toast = Toast.makeText(context, text, duration);
-        toast.show();
+            Toast toast = Toast.makeText(context, text2, duration);
+            toast.show();
+        }catch (Exception e){
+            Log.e("TOAST",e.getMessage());
+        }
     }
 
     public void retryWan(){
@@ -590,24 +591,22 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                     editor.putString("server_ip",serverIP);
                     editor.commit();
-                    displayToast("Changed to: "+serverIP);
+                    Log.d("NETWORK","Changed to: "+serverIP);
                     }})
                 .setNegativeButton(android.R.string.no, null).show();
     }
 
 
-    public void updateLogin(boolean success, String userid){
+    public void updateLogin(){
 
         SharedPreferences pref = getSharedPreferences(prefs, 0); // 0 - for private mode
         SharedPreferences.Editor editor = pref.edit();
-        editor.putBoolean("login",success);
-        editor.putString("username",userid);
-        editor.commit();
+        editor.putBoolean("login", false);
+        editor.putString("username", "Not_important");
+        editor.apply();
 
-        if(!success){
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-        }
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
 
 
     }
@@ -619,7 +618,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
         switch (item.getItemId()) {
             case R.id.menu_logout:
-                updateLogin(false, "Not_important");
+                updateLogin();
                 return true;
 
             case R.id.menu_about:
@@ -629,7 +628,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
                 }
-                displayToast("App version: " + versionName);
+                Log.d("NETWORK", "App version: " + versionName);
                 return true;
 
             case R.id.menu_reload:
@@ -652,18 +651,21 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 return true;
 
             case R.id.menu_LAN_AUTO:
-                serverIP_AUTO = pref.getString("server_ip_auto", "true");
-                if (serverIP_AUTO.equals("false")) {
-                    item.setChecked(true);
-                    serverIP_AUTO = "true";
-                    editor.putString("server_ip_auto", "true");
-                } else {
-                    serverIP_AUTO = "false";
-                    item.setChecked(false);
-                    editor.putString("server_ip_auto", "false");
+                if (android.os.Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    displayToast("Please grant location permission...");
+                } else{
+                    serverIP_AUTO = pref.getString("server_ip_auto", "true");
+                    if (serverIP_AUTO.equals("false")) {
+                        item.setChecked(true);
+                        serverIP_AUTO = "true";
+                        editor.putString("server_ip_auto", "true");
+                    } else {
+                        serverIP_AUTO = "false";
+                        item.setChecked(false);
+                        editor.putString("server_ip_auto", "false");
+                    }
+                    editor.commit();
                 }
-                editor.commit();
-
                 return true;
 
             default:
@@ -807,7 +809,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //Navigation Drawer
     private void addDrawerItems() {
         String[] osArray = { "Controls", "Logs", "Cameras"};
-        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
+        ArrayAdapter<String> mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
     }
 
@@ -832,7 +834,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         };
 
         mDrawerToggle.setDrawerIndicatorEnabled(true);
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
 
     }
 
@@ -845,7 +847,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 new ReadLog(this).execute("status",serverIP,user,"no_log","MainActivity");
             }
         }else{
-            displayToast("No internet connection!");
+            displayToast("No network");
         }
 
     }
@@ -943,5 +945,87 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
 
+    public String getWifiName() {
+        updatePermissionNetwork();
+
+        WifiManager manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        if (manager != null && manager.isWifiEnabled()) {
+            WifiInfo wifiInfo = manager.getConnectionInfo();
+            if (wifiInfo != null) {
+                NetworkInfo.DetailedState state = WifiInfo.getDetailedStateOf(wifiInfo.getSupplicantState());
+                if (state == NetworkInfo.DetailedState.CONNECTED || state == NetworkInfo.DetailedState.OBTAINING_IPADDR) {
+                    return wifiInfo.getSSID();
+                }
+            }
+        }
+        return null;
+    }
+
+    public void updatePermissionNetwork() {
+        Log.d("WIFI","updateNetworkPermission beginning");
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            Log.d("WIFI","Version is above 23");
+            // Here, thisActivity is the current activity
+            if (ContextCompat.checkSelfPermission(this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                Log.d("WIFI","Permission is denied :'(");
+                // Should we show an explanation?
+
+                /*if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                    // Show an explanation to the user *asynchronously* -- don't block
+                    // this thread waiting for the user's response! After the user
+                    // sees the explanation, try again to request the permission.
+
+                } else {*/
+
+                    // No explanation needed, we can request the permission.
+
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                            PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+
+                    // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                    // app-defined int constant. The callback method gets the
+                    // result of the request.
+                //}
+            }else{
+                Log.d("WIFI","Permission is already granted?");
+            }
+
+
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+
+                    Log.d("WIFI","Wifi permission granted");
+
+                } else {
+
+                    Log.d("WIFI","Wifi permission denied");
+
+                    serverIP_AUTO = "false";
+                    editor.putString("server_ip_auto", "false");
+                    editor.commit();
+                }
+
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }
 
 }
