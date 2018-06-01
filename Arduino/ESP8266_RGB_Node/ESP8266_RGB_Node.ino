@@ -7,10 +7,13 @@
 #include <ESP8266HTTPClient.h>
 
 #define UPDATE_INTERVAL 1000
-#define REQUEST_STATE "http://192.168.1.20/node_mysql.php?node=door_main&row=node_state_desired&action=read"
-#define UPDATE_STATE_LOCKED "http://192.168.1.20/node_mysql.php?node=door_main&row=node_state_current&action=write&value=locked"
-#define UPDATE_STATE_UNLOCKED "http://192.168.1.20/node_mysql.php?node=door_main&row=node_state_current&action=write&value=unlocked"
-#define UPDATE_REQUEST_EXECUTED "http://192.168.1.20/node_mysql.php?node=door_main&row=node_state_desired&action=write&value=no_change"
+
+#define UPDATE_INTERVAL 1000
+#define REQUEST_MODE "http://192.168.1.20/node_mysql.php?node=rgbmode_tv&row=node_state_desired&action=read"
+#define REQUEST_COLOR "http://192.168.1.20/node_mysql.php?node=rgbcolor_tv&row=node_state_desired&action=read"
+#define REQUEST_SPEED "http://192.168.1.20/node_mysql.php?node=rgbspeed_tv&row=node_state_desired&action=read"
+#define REQUEST_BRIGHTNESS "http://192.168.1.20/node_mysql.php?node=rgbbrightness_tv&row=node_state_desired&action=read"
+
 
 ESP8266WiFiMulti WiFiMulti;
 String payload="none";
@@ -18,6 +21,13 @@ long lastUpdate=0;
 
 const char* ssid = "PoliNET";
 const char* password = "12345678";
+
+int rgbMode=0;
+int rgbBrightness=0;
+int rgbSpeed=0;
+int redBrightnesss=0;
+int greenBrightness=0;
+int blueBrightness=0;
 
 void setup() {
   pinMode(2,OUTPUT);
@@ -31,19 +41,7 @@ void setup() {
   WiFi.begin(ssid, password);
   }
 
-  // Port defaults to 8266
-  // ArduinoOTA.setPort(8266);
-
-  // Hostname defaults to esp8266-[ChipID]
-  // ArduinoOTA.setHostname("myesp8266");
-
-  // No authentication by default
-  // ArduinoOTA.setPassword("admin");
-
-  // Password can be set with it's md5 value as well
-  // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
-  // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
-  ArduinoOTA.setHostname("HOUSE_DOOR_ESP");
+  ArduinoOTA.setHostname("RGB_TV_ESP");
   ArduinoOTA.onStart([]() {
     String type;
     if (ArduinoOTA.getCommand() == U_FLASH)
@@ -77,9 +75,7 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
 if(millis()>lastUpdate+UPDATE_INTERVAL){
-  digitalWrite(2,HIGH);
-  delay(10);
-  digitalWrite(2,LOW);
+
   lastUpdate=millis();
   wifiAction(REQUEST_STATE);
   executeAction(payload);
@@ -89,33 +85,75 @@ if(WiFi.status() != WL_CONNECTED) {
 }
 }
 
-if(Serial.available()){
-  int lock_status=Serial.read(); //0-uncloked, 1-locked
-  if(lock_status=='0'){
-    wifiAction(UPDATE_STATE_UNLOCKED);
-  }else if(lock_status='1'){    
-    wifiAction(UPDATE_STATE_LOCKED);
-  }
-}
-
 
 }
 
 
 void executeAction(String action){
-if(action=="OK:no_change"){
-}else{
-  if(action=="OK:unlocked"){
-    Serial.write('0');
-    wifiAction(UPDATE_REQUEST_EXECUTED);
-  }else if(action=="OK:locked"){
-    Serial.write('1');
-    wifiAction(UPDATE_REQUEST_EXECUTED);
-    
+  temp_success=1;
+//Check for rgb mode change
+  wifiAction(REQUEST_MODE);
+switch()
+  
+  if (temp_success == 1&&payload== "0") Serial.write("p");
+  if (temp_success == 1&&payload == "1") Serial.write("t");
+  if (temp_success == 1&&payload == "2") Serial.write("c");
+  if (temp_success == 1&&payload == "3") Serial.write("d");
+  if (temp_success == 1&&payload == "4") Serial.write("o");
+  if (temp_success == 1&&payload == "5") Serial.write("u");
+  if (temp_success == 1 && payload!="no_change") temp_success = webAction("rgbmode_dominik", "node_state_desired", "write", "no_change");
+
+  //Check for RGB speed change
+  if (temp_success == 1)  temp_success = webAction("rgbspeed_dominik", "node_state_desired", "read", "not_important");
+  if (temp_success == 1&&payload != "no_change") {
+    Serial.write("k");
+    Serial.write(payload.toInt());
   }
+  if (temp_success == 1 && payload!="no_change") temp_success = webAction("rgbspeed_dominik", "node_state_desired", "write", "no_change");
 
-}
+  //Check for RGB brightness change
+  if (temp_success == 1)  temp_success = webAction("rgbbrightness_dominik", "node_state_desired", "read", "not_important");
+  if (temp_success == 1&&payload != "no_change") {
+    Serial.write("l");
+    Serial.write(payload.toInt());
+  }
+  if (temp_success == 1 && payload!="no_change") temp_success = webAction("rgbbrightness_dominik", "node_state_desired", "write", "no_change");
 
+  //Check for light brightness change
+  if (temp_success == 1)  temp_success = webAction("lightbrightness_dominik", "node_state_desired", "read", "not_important");
+  if (temp_success == 1&&payload != "no_change") {
+    Serial.write("L");
+    Serial.write(payload.toInt());
+  }
+  if (temp_success == 1 && payload!="no_change") temp_success = webAction("lightbrightness_dominik", "node_state_desired", "write", "no_change");
+
+
+  //Check for RGB color change
+  if (temp_success == 1)  temp_success = webAction("rgbcolor_dominik", "node_state_desired", "read", "not_important");
+  if (temp_success == 1&&payload != "no_change") {
+    Serial.write("n");
+    
+    String temp_nesto = "000";
+    char temp_str[20] = "000:000:000";
+    payload.toCharArray(temp_str, 20);
+    const char temp_s[2] = ":";
+    char *temp_token;
+    temp_token = strtok(temp_str, temp_s);
+
+    while ( temp_token != NULL ){
+      temp_nesto = temp_token;
+      Serial.write(temp_nesto.toInt());
+      temp_token = strtok(NULL, temp_s);
+      
+    }
+
+
+  }
+  if (temp_success == 1 && payload!="no_change") temp_success = webAction("rgbcolor_dominik", "node_state_desired", "write", "no_change");
+
+
+
+  
 
 }
 
