@@ -2,22 +2,25 @@ package org.no_ip.wqwdpxd.homeautomationwear_php;
 
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
+import android.util.Base64;
+import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.PasswordAuthentication;
 import java.net.URL;
-
+import java.net.URLConnection;
 public class ReadLog extends AsyncTask<String, String, String> {
 
     private boolean isMainActivity=false;
-    @SuppressLint("StaticFieldLeak")
-    private LogsActivity activityLogs;
-    ReadLog(LogsActivity a) {
-        this.activityLogs = a;
-    }
     @SuppressLint("StaticFieldLeak")
     private MainActivity activityMain;
     ReadLog(MainActivity b) {
@@ -27,99 +30,83 @@ public class ReadLog extends AsyncTask<String, String, String> {
     protected String doInBackground(String... message) {
         boolean getLogs=(message[0].equals("true"));
         String result="Logs Loaded";
-        String link=message[1];
-        String user=message[2];
-        String logName=message[3];
+        String user=message[1];
+        String logName=message[2];
         String phpReturned="Nothing";
-        if(message[4].equals("MainActivity"))
+        if(message[3].equals("MainActivity"))
             isMainActivity=true;
 
         URL url = null;
         String urltext;
-        if(getLogs)
-             urltext = "http://" + link + "/logs/list_all.php?user=" + user;
-        else if(!isMainActivity)
-            urltext = "http://" + link + "/logs/"+logName;
-        else
-            urltext = "http://" + link + "/current_status_mysql.php";
 
+            urltext = "http://polichousecontrol.ddns.net:1880/remote/status";
 
-                    try {
-                url = new URL(urltext);
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-                result = e.toString();
-            }
+        if(message[0].equals("status")) {
+
             HttpURLConnection urlConnection = null;
             try {
+                url = new URL(urltext);
                 if (url != null) {
-                    urlConnection = (HttpURLConnection) url.openConnection();
+                   urlConnection = (HttpURLConnection) url.openConnection();
                 }
                 if (urlConnection != null) {
+
+
+                    Log.d("DEBUG-READLOG","DEBUG1");
                     urlConnection.setConnectTimeout(3000);
+
                 }
-            } catch (java.net.SocketTimeoutException e) {
-                result = "ERR: Timeout";
+
+
+                Log.d("DEBUG-READLOG","DEBUG3");
+                InputStream in = null;
+                InputStreamReader isw;
+                if (urlConnection != null) {
+                    in = urlConnection.getInputStream();
+                    isw = new InputStreamReader(in);
+
+                    int data = isw.read();
+                    String response = "";
+                    while (data != -1) {
+                        char current = (char) data;
+                        data = isw.read();
+                        response += current;
+                    }
+                    Log.d("DEBUG-READLOG",response);
+
+                    JSONObject reader = new JSONObject(response);
+                    MainActivity.vswLight1State=reader.getString("light_livingroom_1").equals("on")?true:false;
+                    MainActivity.vswLight2State=reader.getString("light_livingroom_2").equals("on")?true:false;
+                    MainActivity.vswHouseDoorState=reader.getString("house_door_state").equals("unlock")?true:false;
+                    MainActivity.vswGate2State=reader.getString("gate2_state").equals("open")?true:false;
+                    MainActivity.vsbLightDState=Integer.parseInt(reader.getString("light_dominik"));
+                    if (in != null) {
+                        in.close();
+                    }
+                }else{
+                    result = "PHP Error";
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 result = e.toString();
-            }
-            try {
-                BufferedReader in = null;
-                if (urlConnection != null) {
-                    in = new BufferedReader(new InputStreamReader(
-                            urlConnection.getInputStream()));
-                }
-                String inputLine;
-                if (in != null) {
-                    while ((inputLine = in.readLine()) != null){
-                        if(inputLine.equals("-START-"))
-                            result="Got Status";
-                            if(inputLine.equals("Success")||inputLine.equals("-START-"))
-                                phpReturned="Success";
-                            else if(!isMainActivity)
-                                activityLogs.addLog(inputLine);
-                            else
-                                activityMain.addStatusLine(inputLine);
-
-                        }
-                }
-                if(!phpReturned.equals("Success")&&getLogs)
-                    result="PHP Error";
-                if (in != null) {
-                    in.close();
-                }
-            } catch (IOException e) {
+            } catch (JSONException e) {
                 e.printStackTrace();
-                result=e.toString();
             } finally {
                 if (urlConnection != null) {
                     urlConnection.disconnect();
                 }
             }
 
-
-
-
-
-
-
-
-
         return result;
+        }
+
+            return null;
     }
 
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
         Global.ReadLog_running=false;
-        if(!s.equals("Logs Loaded")&&!s.equals("Got Status"))
-            if(!isMainActivity)
-                activityLogs.retryWan();
-        if(!isMainActivity)
-            activityLogs.addLogItems();
-        else {
-            activityMain.updateValues();
-        }
+
     }
 
 }

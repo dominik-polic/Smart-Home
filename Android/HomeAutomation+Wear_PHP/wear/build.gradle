@@ -6,8 +6,8 @@ android {
         applicationId "org.no_ip.wqwdpxd.homeautomationwear_php"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 28
-        versionName "1.6.3-wear"
+        versionCode 33
+        versionName "2.2.0-wear"
     }
     buildTypes {
         release {
@@ -18,8 +18,8 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.google.android.support:wearable:2.1.0'
-    compile 'com.google.android.gms:play-services-wearable:11.6.2'
-    provided 'com.google.android.wearable:wearable:2.1.0'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.google.android.support:wearable:2.1.0'
+    implementation 'com.google.android.gms:play-services-wearable:11.6.2'
+    compileOnly 'com.google.android.wearable:wearable:2.1.0'
 }

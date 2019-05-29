@@ -12,6 +12,8 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -31,16 +33,21 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Timer;
 import java.util.TimerTask;
-import yuku.ambilwarna.AmbilWarnaDialog;
 
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener, ActivityCompat.OnRequestPermissionsResultCallback {
+public class MainActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 32501;
 
@@ -49,59 +56,28 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
 
-    public int firstrgb=0;
-    public String serverIP;
-    public String serverIP_AUTO;
+    private Handler mHandler;
+    public String useWeb="Unknown";
     public String user="Unknown";
-    public int startingcolor=Color.BLACK;
-    public int brightness1=0,brightness2=0,speed3=0;
     public boolean first=true;
-    private Button vbtnLightsOn;
-    private Button vbtnLightsOff;
-    private Button vbtnGate2Open;
-    private Button vbtnGate2Close;
-    private Button vbtnTestConnection;
-    private Button vbtnRGBRemote;
-    private Button vbtnDoorLock;
-    private Button vbtnDoorUnlock;
-    private Button vbtnDoorHouseLock;
-    private Button vbtnDoorHouseUnlock;
-    private Button vbtnBellRing;
-    private Button vbtnBrightnessRGBIncrease;
-    private Button vbtnBrightnessRGBDecrease;
-    private Button vbtnBrightnessMasterIncrease;
-    private Button vbtnBrightnessMasterDecrease;
-    private Button vbtnResetArduino;
-    private Button vbtnStopServer;
-    private Button vbtnGate1ShortOpen;
-    private Button vbtnPickColor;
-    private Spinner spinner;
-    private SeekBar vskbBrightnessRGB;
-    private SeekBar vskbBrightnesMaster;
-    private SeekBar vskbSpeedRGB;
+    private Switch vswHouseDoor;
+    private Switch vswGate2;
+    private Switch vswLight1;
+    private Switch vswLight2;
+    private Button vbtnGate1;
+    private SeekBar vsbLightD;
     SharedPreferences pref;
     SharedPreferences.Editor editor;
 
 
-    //Status values BEGIN-----------
-    public boolean x_lightson=false;
-    public boolean x_gate2locked=false;
-    public boolean x_doorhouselocked=false;
-    public int x_rgbmode=0;
-    public boolean x_rgboverride=false;
-    public int x_rgbspeed=0;
-    public int x_rgbbrightness=0;
-    public int x_redbrightness=0;
-    public int x_greenbrightness=0;
-    public int x_bluebrightness=0;
-    public int x_masterlightbrightness=0;
-    //Status values END------------
 
 
     String prefs;
-    String localWiFi;
-    String localIP;
-    String wanIP;
+    static boolean vswLight1State;
+    static boolean vswLight2State;
+    static boolean vswGate2State;
+    static boolean vswHouseDoorState;
+    static int vsbLightDState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,9 +90,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
         prefs = getResources().getString(R.string.prefs);
-        localWiFi = getResources().getString(R.string.localWiFi);
-        localIP = getResources().getString(R.string.local_IP);
-        wanIP = getResources().getString(R.string.wan_IP);
 
         //Get the IP!
 
@@ -124,59 +97,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         pref = getApplicationContext().getSharedPreferences(prefs, 0); // 0 - for private mode
         editor = pref.edit();
         boolean loggedIn = pref.getBoolean("login", false);
-        serverIP_AUTO=pref.getString("server_ip_auto","true");
-
-        if(serverIP_AUTO.equals("true")){
-
-
-            Log.d("WIFI","About to check wifi");
-
-            String wifiname=getWifiName();
-
-            Log.d("WIFI","Wifi name: "+wifiname);
-            if (("\""+localWiFi+"\"").equals(wifiname)) {
-                serverIP = localIP;
-            } else {
-                serverIP=wanIP;
-            }
-            editor.putString("server_ip",serverIP);
-            editor.apply();
-        }else{
-
-            serverIP = pref.getString("server_ip", localIP);
-        }
+        useWeb=pref.getString("use_web","false");
 
 
 
 
 
 
-        vbtnLightsOn = findViewById(R.id.btnLightsOn);
-        vbtnLightsOff = findViewById(R.id.btnLightsOff);
-        vbtnGate2Open = findViewById(R.id.btnGate2Open);
-        vbtnGate2Close = findViewById(R.id.btnGate2Close);
-        vbtnTestConnection = findViewById(R.id.btnTestConnection);
-        vbtnRGBRemote = findViewById(R.id.btnRGBRemote);
-        vbtnDoorLock = findViewById(R.id.btnDoorLock);
-        vbtnDoorUnlock = findViewById(R.id.btnDoorUnlock);
-        vbtnDoorHouseLock = findViewById(R.id.btnDoorHouseLock);
-        vbtnDoorHouseUnlock = findViewById(R.id.btnDoorHouseUnlock);
-        vbtnBellRing = findViewById(R.id.btnBellRing);
-        vbtnBrightnessRGBIncrease = findViewById(R.id.btnBrightnessRGBIncrease);
-        vbtnBrightnessRGBDecrease = findViewById(R.id.btnBrightnessRGBDecrease);
-        vbtnBrightnessMasterIncrease = findViewById(R.id.btnBrightnessMasterIncrease);
-        vbtnBrightnessMasterDecrease = findViewById(R.id.btnBrightnessMasterDecrease);
-        vbtnResetArduino = findViewById(R.id.btnResetArduino);
-        vbtnStopServer = findViewById(R.id.btnStopServer);
-        vbtnGate1ShortOpen = findViewById(R.id.btnGate1ShortOpen);
-        vbtnPickColor = findViewById(R.id.btnPickColor);
-
-        vskbBrightnesMaster = findViewById(R.id.skbBrightnessMaster);
-        vskbBrightnessRGB = findViewById(R.id.skbBrightnessRGB);
-        vskbSpeedRGB = findViewById(R.id.skbSpeedRGB);
-
-        spinner = findViewById(R.id.spinner);
-
+        vswHouseDoor = findViewById(R.id.swHouseDoor);
+        vswGate2=findViewById(R.id.swGate2);
+        vswLight1=findViewById(R.id.swLivingRoom1);
+        vswLight2=findViewById(R.id.swLivingRoom2);
+        vbtnGate1=findViewById(R.id.btnGate1ShortOpen);
+        vsbLightD=findViewById(R.id.sbDominik);
 
         //Navigation Drawer
         mDrawerList = findViewById(R.id.navList);
@@ -203,177 +136,48 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
 
+        vswHouseDoor.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // do something, the isChecked will be
+                // true if the switch is in the On position
+                sendCommand("node=door_house&action="+(isChecked?"unlock":"lock"),user);
+                vswHouseDoorState=isChecked;
+            }
+        });
 
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.modes_array, android.R.layout.simple_spinner_item);
-// Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-// Apply the adapter to the spinner
-        spinner.setAdapter(adapter);
-        spinner.setOnItemSelectedListener(this);
+        vswGate2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // do something, the isChecked will be
+                // true if the switch is in the On position
+                sendCommand("node=gate2&action="+(isChecked?"open":"close"),user);
+                vswGate2State=isChecked;
+            }
+        });
 
+        vswLight1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // do something, the isChecked will be
+                // true if the switch is in the On position
+                sendCommand("node=light_livingroom_1&action="+(isChecked?"on":"off"),user);
+                vswLight1State=isChecked;
+            }
+        });
 
-
-
-        vbtnPickColor.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-
-                openDialog();
-
-
-                /*
-                new ChromaDialog.Builder()
-                        .initialColor(startingcolor)
-                        .colorMode(ColorMode.RGB) // There's also RGB, ARGB and HSV
-                        .onColorSelected(new ColorSelectListener() {
-                            @Override public void onColorSelected(int color) {
-                                int r = Color.red(color)/2;
-                                int g = Color.green(color)/2;
-                                int b = Color.blue(color)/2;
-                                sendCommand("rgb.update,"+r+","+g+","+b,user,serverIP);
-                                vbtnPickColor.setBackgroundColor(color);
-                                startingcolor=color;
-                            }
-                        })
-                        .create()
-                        .show(getSupportFragmentManager(), "ChromaDialog");*/
+        vswLight2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // do something, the isChecked will be
+                // true if the switch is in the On position
+                sendCommand("node=light_livingroom_2&action="+(isChecked?"on":"off"),user);
+                vswLight2State=isChecked;
             }
         });
 
 
-
-        vbtnLightsOn.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=light_dominik&action=on",user,serverIP);
-            }
-        });
-        vbtnLightsOff.setOnClickListener(new View.OnClickListener() {
+        vbtnGate1.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                sendCommand("node=light_dominik&action=off",user,serverIP);
-            }
-        });
-        vbtnGate2Open.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=gate2&action=open",user,serverIP);
-            }
-        });
-        vbtnGate2Close.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=gate2&action=closed",user,serverIP);
-            }
-        });
-        vbtnTestConnection.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=test_led&action=pulse",user,serverIP);
-            }
-        });
-        vbtnRGBRemote.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=rgboverride_dominik&action=true",user,serverIP);
-            }
-        });
-        vbtnDoorLock.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=door_dominik&action=locked",user,serverIP);
-            }
-        });
-        vbtnDoorUnlock.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=door_dominik&action=unlocked",user,serverIP);
-            }
-        });
-        vbtnDoorHouseLock.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=door_main&action=locked",user,serverIP);
-            }
-        });
-        vbtnDoorHouseUnlock.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=door_main&action=unlocked",user,serverIP);
-            }
-        });
-        vbtnBellRing.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=bell&action=pulse",user,serverIP);
-            }
-        });
-        vbtnBrightnessRGBIncrease.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=rgbbrightness_dominik&action="+(x_rgbbrightness+10),user,serverIP);
-            }
-        });
-        vbtnBrightnessRGBDecrease.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=rgbbrightness_dominik&action="+(x_rgbbrightness-10),user,serverIP);
-            }
-        });
-        vbtnBrightnessMasterIncrease.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=lightbrightness_dominik&action="+(x_masterlightbrightness+10),user,serverIP);
-            }
-        });
-        vbtnBrightnessMasterDecrease.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=lightbrightness_dominik&action="+(x_masterlightbrightness-10),user,serverIP);
-            }
-        });
-        vbtnResetArduino.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                resetArduino();
-            }
-        });
-        vbtnStopServer.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                stopServer();
-
-
-
-
-
-            }
-        });
-        vbtnGate1ShortOpen.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                sendCommand("node=gate1&action=pulse",user,serverIP);
+                sendCommand("node=gate1&action=open",user);
             }
         });
 
@@ -381,12 +185,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
 
-        vskbBrightnesMaster.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        vsbLightD.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                brightness1=progress;
+
             }
 
             @Override
@@ -396,48 +200,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                sendCommand("node=lightbrightness_dominik&action="+brightness1,user,serverIP);
+                sendCommand("node=light_dominik&action="+vsbLightD.getProgress(),user);
             }
         });
 
 
-        vskbBrightnessRGB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
-
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                brightness2=progress;
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                sendCommand("node=rgbbrightness_dominik&action="+brightness2,user,serverIP);
-            }
-        });
-
-        vskbSpeedRGB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
-
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                speed3=progress;
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                sendCommand("node=rgbspeed_dominik&action="+(speed3),user,serverIP);
-            }
-        });
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
@@ -482,27 +249,49 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         });
 
 
+
+
         getStatus();
-        int update_frequency;
-        if(serverIP.equals(localIP))
-            update_frequency=200;
-        else
-            update_frequency=1000;
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
 
-                // run AsyncTask here.
-                if(!Global.ReadLog_running)
-                    getStatus();
 
-            }
-        },0, update_frequency);
 
-        sendCommand("connect",user,serverIP);
 
+        sendCommand("connect",user);
+        mHandler = new Handler();
+        startRepeatingTask();
+
+        if(useWeb.equals("true")){
+            Intent intent = new Intent(MainActivity.this, LogsActivity.class);
+            startActivity(intent);
+        }
     }
+
+    void startRepeatingTask() {
+        mStatusChecker.run();
+    }
+
+    void stopRepeatingTask() {
+        mHandler.removeCallbacks(mStatusChecker);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        stopRepeatingTask();
+    }
+
+    Runnable mStatusChecker = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                getStatus();
+            } finally {
+                // 100% guarantee that this always happens, even if
+                // your update method throws an exception
+                mHandler.postDelayed(mStatusChecker, 500);
+            }
+        }
+    };
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -518,11 +307,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
-    public void sendCommand(String send_text,String user, String lanwan){
+    public void sendCommand(String send_text,String user){
         if(networkConnected()) {
             if(!Global.SendCommand_running) {
                 Global.SendCommand_running=true;
-                new SendCommand(this).execute(send_text, user, lanwan, "MainActivity");
+                Log.d("DEBUG-DOMI",send_text);
+                new SendCommand(this).execute(send_text, user, "MainActivity");
             }
         }else{
             displayToast("No network");
@@ -545,23 +335,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
-    void openDialog() {
-        AmbilWarnaDialog dialog = new AmbilWarnaDialog(MainActivity.this, startingcolor, false, new AmbilWarnaDialog.OnAmbilWarnaListener() {
-            @Override
-            public void onOk(AmbilWarnaDialog dialog, int color) {
-                MainActivity.this.startingcolor = color;
-                int r = Color.red(color)/2;
-                int g = Color.green(color)/2;
-                int b = Color.blue(color)/2;
-                sendCommand("node=rgbcolor_dominik&action="+r+":"+g+":"+b,user,serverIP);
-            }
 
-            @Override
-            public void onCancel(AmbilWarnaDialog dialog) {
-            }
-        });
-        dialog.show();
-    }
 
     public void displayToast(String text2){
         try {
@@ -574,28 +348,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             Log.e("TOAST",e.getMessage());
         }
     }
-
-    public void retryWan(){
-        new AlertDialog.Builder(this)
-                .setTitle("Server not found!")
-                .setMessage("Server: "+serverIP+" not found. Would you like to swap IP address?")
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                    if(serverIP.equals(localIP))
-                        serverIP=wanIP;
-                    else
-                        serverIP=localIP;
-
-
-                    editor.putString("server_ip",serverIP);
-                    editor.commit();
-                    Log.d("NETWORK","Changed to: "+serverIP);
-                    }})
-                .setNegativeButton(android.R.string.no, null).show();
-    }
-
 
     public void updateLogin(){
 
@@ -628,44 +380,26 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
                 }
-                Log.d("NETWORK", "App version: " + versionName);
+                displayToast("App version: " + versionName);
                 return true;
 
             case R.id.menu_reload:
                 getStatus();
                 return true;
 
-            case R.id.menu_LAN:
-                serverIP = pref.getString("server_ip", localIP);
-                if (serverIP.equals(localIP)) {
-                    serverIP = wanIP;
+
+
+            case R.id.menu_WEB_DEFAULT:
+                useWeb = pref.getString("use_web", "false");
+                if (useWeb.equals("true")) {
+                    useWeb="false";
                     item.setChecked(false);
                 } else {
                     item.setChecked(true);
-                    serverIP = localIP;
+                    useWeb="true";
                 }
-                editor.putString("server_ip", serverIP);
+                editor.putString("use_web", useWeb);
                 editor.commit();
-
-                displayToast("New IP: " + serverIP);
-                return true;
-
-            case R.id.menu_LAN_AUTO:
-                if (android.os.Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    displayToast("Please grant location permission...");
-                } else{
-                    serverIP_AUTO = pref.getString("server_ip_auto", "true");
-                    if (serverIP_AUTO.equals("false")) {
-                        item.setChecked(true);
-                        serverIP_AUTO = "true";
-                        editor.putString("server_ip_auto", "true");
-                    } else {
-                        serverIP_AUTO = "false";
-                        item.setChecked(false);
-                        editor.putString("server_ip_auto", "false");
-                    }
-                    editor.commit();
-                }
                 return true;
 
             default:
@@ -683,132 +417,51 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.overflow, menu);
-        MenuItem checkbox_LAN = menu.findItem(R.id.menu_LAN);
-        if(serverIP.equals(localIP))
-            checkbox_LAN.setChecked(true);
+        MenuItem checkbox_WEB = menu.findItem(R.id.menu_WEB_DEFAULT);
+        if(useWeb.equals("true"))
+            checkbox_WEB.setChecked(true);
         else
-            checkbox_LAN.setChecked(false);
+            checkbox_WEB.setChecked(false);
 
-        MenuItem checkbox_LAN_AUTO = menu.findItem(R.id.menu_LAN_AUTO);
-        if(serverIP_AUTO.equals("true"))
-            checkbox_LAN_AUTO.setChecked(true);
-        else
-            checkbox_LAN_AUTO.setChecked(false);
+
 
         return true;
     }
     @Override
     public void onResume(){
-        serverIP=pref.getString("server_ip",localIP);
         super.onResume();
         updateUser();
-        updateValues();
     }
 
     public void updateUser(){
         final SharedPreferences pref = getApplicationContext().getSharedPreferences(prefs, 0); // 0 - for private mode
         user=pref.getString("username", "Unknown");
         if(user.equals("dominik")){
-            vbtnLightsOff.setEnabled(true);
-            vbtnLightsOn.setEnabled(true);
-            vbtnGate2Open.setEnabled(true);
-            vbtnGate2Close.setEnabled(true);
-            vbtnTestConnection.setEnabled(true);
-            vbtnRGBRemote.setEnabled(true);
-            vbtnDoorLock.setEnabled(true);
-            vbtnDoorUnlock.setEnabled(true);
-            vbtnDoorHouseLock.setEnabled(true);
-            vbtnDoorHouseUnlock.setEnabled(true);
-            vbtnBellRing.setEnabled(true);
-            vbtnBrightnessRGBIncrease.setEnabled(true);
-            vbtnBrightnessRGBDecrease.setEnabled(true);
-            vbtnBrightnessMasterIncrease.setEnabled(true);
-            vbtnBrightnessMasterDecrease.setEnabled(true);
-            vbtnResetArduino.setEnabled(true);
-            vbtnStopServer.setEnabled(true);
-            vbtnGate1ShortOpen.setEnabled(true);
-            spinner.setEnabled(true);
-            vbtnPickColor.setEnabled(true);
-            vskbSpeedRGB.setEnabled(true);
-            vskbBrightnessRGB.setEnabled(true);
-            vskbBrightnesMaster.setEnabled(true);
-
+            vswGate2.setEnabled(true);
+            vswHouseDoor.setEnabled(true);
+            vswLight2.setEnabled(true);
+            vswLight1.setEnabled(true);
+            vbtnGate1.setEnabled(true);
+            vsbLightD.setEnabled(true);
         }else{
-            vbtnGate2Open.setEnabled(true);
-            vbtnGate2Close.setEnabled(true);
-            vbtnLightsOff.setEnabled(false);
-            vbtnLightsOn.setEnabled(false);
-            vbtnTestConnection.setEnabled(false);
-            vbtnRGBRemote.setEnabled(false);
-            vbtnDoorLock.setEnabled(false);
-            vbtnDoorUnlock.setEnabled(false);
-            vbtnDoorHouseLock.setEnabled(true);
-            vbtnDoorHouseUnlock.setEnabled(true);
-            vbtnBellRing.setEnabled(true);
-            vbtnBrightnessRGBIncrease.setEnabled(false);
-            vbtnBrightnessRGBDecrease.setEnabled(false);
-            vbtnBrightnessMasterIncrease.setEnabled(false);
-            vbtnBrightnessMasterDecrease.setEnabled(false);
-            vbtnResetArduino.setEnabled(false);
-            vbtnStopServer.setEnabled(false);
-            vbtnGate1ShortOpen.setEnabled(true);
-            spinner.setEnabled(false);
-            vbtnPickColor.setEnabled(false);
-            vskbSpeedRGB.setEnabled(false);
-            vskbBrightnessRGB.setEnabled(false);
-            vskbBrightnesMaster.setEnabled(false);
+            vswGate2.setEnabled(true);
+            vswHouseDoor.setEnabled(true);
+            vswLight2.setEnabled(true);
+            vswLight1.setEnabled(true);
+            vbtnGate1.setEnabled(true);
+            vsbLightD.setEnabled(false);
 
         }
 
-        updateValues();
-    }
-
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-        if(!first)
-            sendCommand("node=rgbmode_dominik&action="+parent.getSelectedItemPosition(),user,serverIP);
-        else first=false;
     }
 
 
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-
-    }
-
-    public void stopServer(){
-        new AlertDialog.Builder(this)
-                .setTitle("Warning")
-                .setMessage("Are you sure you want to stop the server?")
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        sendCommand("node=reset&action=server",user,serverIP);
-                        displayToast("SERVER STOPPED!");
-                    }})
-                .setNegativeButton(android.R.string.no, null).show();
-    }
-
-    public void resetArduino(){
-        new AlertDialog.Builder(this)
-                .setTitle("Warning")
-                .setMessage("Are you sure you want to reset arduino?")
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        sendCommand("node=reset&action=arduino",user,serverIP);
-                        displayToast("Arduino resetting...");
-                    }})
-                .setNegativeButton(android.R.string.no, null).show();
-    }
 
 
 
     //Navigation Drawer
     private void addDrawerItems() {
-        String[] osArray = { "Controls", "Logs", "Cameras"};
+        String[] osArray = { "Controls", "Web Interface", "Cameras"};
         ArrayAdapter<String> mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
     }
@@ -841,125 +494,29 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
     public void getStatus(){
+        updateValues();
         if(networkConnected()) {
             if(!Global.ReadLog_running){
                 Global.ReadLog_running=true;
-                new ReadLog(this).execute("status",serverIP,user,"no_log","MainActivity");
+                new ReadLog(this).execute("status",user,"no_log","MainActivity");
             }
         }else{
             displayToast("No network");
         }
 
+
     }
-
-    public void addStatusLine(String line){
-        String[] command=line.split(":");
-        switch(command[0]){
-            case "light_dominik":
-                x_lightson=(command[1].equals("on"));
-                break;
-
-            case "gate2":
-                x_gate2locked=(command[1].equals("closed"));
-                break;
-
-            case "door_main":
-                x_doorhouselocked=(command[1].equals("locked"));
-                break;
-
-            case "rgboverride_dominik":
-                x_rgboverride=(command[1].equals("true"));
-                break;
-
-            case "rgbmode_domink":
-                x_rgbmode=Integer.parseInt(command[1]);
-                break;
-
-            case "rgbspeed_dominik":
-                x_rgbspeed=Integer.parseInt(command[1]);
-                break;
-
-            case "rgbbrightness_dominik":
-                x_rgbbrightness=Integer.parseInt(command[1]);
-                break;
-
-            case "rgbcolor_dominik":
-                x_redbrightness=Integer.parseInt(command[1]);
-                x_greenbrightness=Integer.parseInt(command[2]);
-                x_bluebrightness=Integer.parseInt(command[3]);
-                break;
-
-
-            case "lightbrightness_dominik":
-                x_masterlightbrightness=Integer.parseInt(command[1]);
-                break;
-
-        }
-    }
-
     public void updateValues(){
+        vswLight1.setChecked(vswLight1State);
+        vswLight2.setChecked(vswLight2State);
+        vswGate2.setChecked(vswGate2State);
+        vswHouseDoor.setChecked(vswHouseDoorState);
+        vsbLightD.setProgress(vsbLightDState);
 
-        vbtnGate2Close.setEnabled(!x_gate2locked);
-        vbtnGate2Open.setEnabled(x_gate2locked);
-        vbtnDoorHouseLock.setEnabled(!x_doorhouselocked);
-        vbtnDoorHouseUnlock.setEnabled(x_doorhouselocked);
-
-        if(user.equals("dominik")) {
-            vskbBrightnesMaster.setProgress(x_masterlightbrightness);
-            vskbBrightnessRGB.setProgress(x_rgbbrightness);
-            vskbSpeedRGB.setProgress(x_rgbspeed);
-            vbtnRGBRemote.setEnabled(x_rgboverride);
-            vbtnLightsOff.setEnabled(x_lightson);
-            vbtnLightsOn.setEnabled(!x_lightson);
-            int rgb_temp=x_rgbmode;
-
-            switch(rgb_temp){
-                case 0:
-                    x_rgbmode=1;
-                    break;
-                case 1:
-                    x_rgbmode=2;
-                    break;
-                case 2:
-                    x_rgbmode=3;
-                    break;
-                case 10:
-                    x_rgbmode=0;
-                    break;
-                case 11:
-                    x_rgbmode=4;
-                    break;
-                case 12:
-                    x_rgbmode=5;
-                    break;
-            }
-
-            if(firstrgb<1){
-                spinner.setSelection(x_rgbmode);
-                firstrgb++;
-            }
-
-            startingcolor=Color.rgb(x_redbrightness*2,x_greenbrightness*2,x_bluebrightness*2);
-            vbtnPickColor.setBackgroundColor(startingcolor);
-        }
     }
 
 
-    public String getWifiName() {
-        updatePermissionNetwork();
 
-        WifiManager manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        if (manager != null && manager.isWifiEnabled()) {
-            WifiInfo wifiInfo = manager.getConnectionInfo();
-            if (wifiInfo != null) {
-                NetworkInfo.DetailedState state = WifiInfo.getDetailedStateOf(wifiInfo.getSupplicantState());
-                if (state == NetworkInfo.DetailedState.CONNECTED || state == NetworkInfo.DetailedState.OBTAINING_IPADDR) {
-                    return wifiInfo.getSSID();
-                }
-            }
-        }
-        return null;
-    }
 
     public void updatePermissionNetwork() {
         Log.d("WIFI","updateNetworkPermission beginning");
@@ -1016,8 +573,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                     Log.d("WIFI","Wifi permission denied");
 
-                    serverIP_AUTO = "false";
-                    editor.putString("server_ip_auto", "false");
                     editor.commit();
                 }
 

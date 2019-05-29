@@ -23,6 +23,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -37,17 +39,14 @@ public class LogsActivity extends AppCompatActivity {
     String wanIP;
 
 
-    boolean logOpen=false;
-    ArrayList<String> logList = new ArrayList<>();
-    private ListView mLogList;
     SharedPreferences pref;
     SharedPreferences.Editor editor;
-    public String serverIP;
-    public String serverIP_AUTO;
     public String user="Unknown";
+    public String useWeb="Unknown";
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
+    private WebView webView;
 
     @SuppressLint("CommitPrefEdits")
     @Override
@@ -55,9 +54,9 @@ public class LogsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_logs);
 
+        webView= (WebView) findViewById(R.id.webview);
+
         prefs = getResources().getString(R.string.prefs);
-        localIP = getResources().getString(R.string.local_IP);
-        wanIP = getResources().getString(R.string.wan_IP);
 
         pref = getApplicationContext().getSharedPreferences(prefs, 0); // 0 - for private mode
         editor = pref.edit();
@@ -69,10 +68,7 @@ public class LogsActivity extends AppCompatActivity {
             finish();
         }
         user=pref.getString("username","Unknown");
-        serverIP=pref.getString("server_ip",localIP);
-        serverIP_AUTO=pref.getString("server_ip_auto",localIP);
-        mLogList = findViewById(R.id.logList);
-        mDrawerList = findViewById(R.id.navList2);
+        useWeb=pref.getString("use_web","false");
 
 
         Toolbar myToolbar = findViewById(R.id.toolbar);
@@ -83,11 +79,8 @@ public class LogsActivity extends AppCompatActivity {
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorAppLogsShade));
 
-
+        mDrawerList = findViewById(R.id.navList2);
         mDrawerLayout = findViewById(R.id.drawer_layout);
-
-        getLogs();
-        //addLogItems();
 
         addDrawerItems();
         setupDrawer();
@@ -124,27 +117,18 @@ public class LogsActivity extends AppCompatActivity {
         });
 
 
-        mLogList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if(mLogList.getItemAtPosition(position).equals("Reload Logs")){
-                    logList.clear();
-                    getLogs();
-                }else if(!logOpen) {
-                    String logname = "log_" + mLogList.getItemAtPosition(position) + ".txt";
-                    //displayToast(logname);
-                    if(getSupportActionBar()!=null) getSupportActionBar().setTitle("Logs: " + mLogList.getItemAtPosition(position));
-                    logList.clear();
-                    getLog(logname);
-                    logOpen = true;
-                }
-            }
-        });
+
 
         if(getSupportActionBar()!=null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
         }
+        webView.setWebViewClient(new WebViewClient());
+        webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setDomStorageEnabled(true);
+        webView.loadUrl("http://polichousecontrol.ddns.net:1880/ui");
+        //webView.loadUrl("https://google.com");
     }
 
     @Override
@@ -158,72 +142,10 @@ public class LogsActivity extends AppCompatActivity {
         super.onConfigurationChanged(newConfig);
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
-    public void addLog(String log_name){
-        logList.add(log_name);
-    }
-
-    public void addLogItems() {
-        ArrayAdapter<String> mLogAdapter;
-        if(logList.size()==0){
-    logOpen=false;
-    String[] logRetry ={"Reload Logs"};
-    mLogAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, logRetry);
-}else {
-    String[] logArray = new String[logList.size()];
-    for (int i = 0; i < logList.size(); i++) {
-        logArray[i] = logList.get(i);
-    }
-
-    String[] logNameArray = new String[logList.size()];
-    for (int i = 0; i < logList.size(); i++) {
-        logNameArray[i] = logArray[i].substring(0, logArray[i].length() - 4).substring(4);
-    }
-
-    if (!logOpen)
-        mLogAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, logNameArray);
-    else
-        mLogAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, logArray);
-}
-
-    mLogList.setAdapter(mLogAdapter);
-
-    }
-
-    public void getLogs(){
-        if(networkConnected()) {
-
-            new ReadLog(this).execute("true",serverIP,user,"no_log","LogsActivity");
-
-        }else{
-            displayToast("No internet connection!");
-        }
-
-    }
-    public void getLog(String log_name){
-        if(networkConnected()) {
-
-                new ReadLog(this).execute("false",serverIP,user,log_name,"LogsActivity");
-
-        }else{
-            displayToast("No internet connection!");
-        }
-
-    }
-
-    public boolean networkConnected() {
-
-        ConnectivityManager cm =
-                (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = null;
-        if (cm != null) {
-            activeNetwork = cm.getActiveNetworkInfo();
-        }
 
 
-        return activeNetwork != null &&
-                activeNetwork.isConnectedOrConnecting();
-    }
+
+
     public void displayToast(String text2){
         Context context = getApplicationContext();
         int duration = Toast.LENGTH_SHORT;
@@ -234,17 +156,13 @@ public class LogsActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(logOpen) {
-            logOpen=false;
-            logList.clear();
-            if(getSupportActionBar()!=null)
-                getSupportActionBar().setTitle("Logs");
-            getLogs();
-        }
+        if(webView.canGoBack())
+            webView.goBack();
+
     }
 
     private void addDrawerItems() {
-        String[] osArray = { "Controls","Logs","Cameras" };
+        String[] osArray = { "Controls","Web Interface","Cameras" };
         ArrayAdapter<String> mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
     }
@@ -296,41 +214,22 @@ public class LogsActivity extends AppCompatActivity {
                 return true;
 
             case R.id.menu_reload:
-                displayToast("Only possible from Control screen!");
+                webView.loadUrl("http://polichousecontrol.ddns.net:1880/ui");
                 return true;
 
-            case R.id.menu_LAN:
-                serverIP=pref.getString("server_ip",localIP);
-                if(serverIP.equals(localIP)) {
-                    serverIP = wanIP;
+            case R.id.menu_WEB_DEFAULT:
+                useWeb = pref.getString("use_web", "false");
+                if (useWeb.equals("true")) {
+                    useWeb="false";
                     item.setChecked(false);
-                }else {
+                } else {
                     item.setChecked(true);
-                    serverIP = localIP;
+                    useWeb="true";
                 }
-                editor.putString("server_ip",serverIP);
+                editor.putString("use_web", useWeb);
                 editor.commit();
-
-                displayToast("New IP: "+serverIP);
                 return true;
 
-            case R.id.menu_LAN_AUTO:
-                if (android.os.Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    displayToast("Please grant location permission...");
-                } else{
-                    serverIP_AUTO=pref.getString("server_ip_auto","true");
-                    if(serverIP_AUTO.equals("false")) {
-                        item.setChecked(true);
-                        serverIP_AUTO="true";
-                        editor.putString("server_ip_auto","true");
-                    }else {
-                        serverIP_AUTO="false";
-                        item.setChecked(false);
-                        editor.putString("server_ip_auto","false");
-                    }
-                    editor.commit();
-                }
-                return true;
 
             case android.R.id.home:
                     finish();
@@ -366,43 +265,18 @@ public class LogsActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.overflow, menu);
-        MenuItem checkbox_LAN = menu.findItem(R.id.menu_LAN);
-        if(serverIP.equals(localIP))
-            checkbox_LAN.setChecked(true);
-        else
-            checkbox_LAN.setChecked(false);
 
-        MenuItem checkbox_LAN_AUTO = menu.findItem(R.id.menu_LAN_AUTO);
-
-        if(serverIP_AUTO.equals("true"))
-            checkbox_LAN_AUTO.setChecked(true);
+        MenuItem checkbox_WEB = menu.findItem(R.id.menu_WEB_DEFAULT);
+        if(useWeb.equals("true"))
+            checkbox_WEB.setChecked(true);
         else
-            checkbox_LAN_AUTO.setChecked(false);
+            checkbox_WEB.setChecked(false);
+
+
 
         return true;
     }
 
-    public void retryWan(){
-        new AlertDialog.Builder(this)
-                .setTitle("Server not found!")
-                .setMessage("Server: "+serverIP+" not found. Would you like to swap IP address?")
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        if(serverIP.equals(localIP))
-                            serverIP=wanIP;
-                        else
-                            serverIP=localIP;
-
-
-                        editor.putString("server_ip",serverIP);
-                        editor.commit();
-                        displayToast("Changed to: "+serverIP);
-                    }})
-                .setNegativeButton(android.R.string.no, null).show();
-
-
-    }
 
 }

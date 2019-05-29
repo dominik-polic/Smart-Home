@@ -18,16 +18,19 @@ apt-get upgrade
 bash -c "$(curl -sL https://raw.githubusercontent.com/MichMich/MagicMirror/master/installers/raspberry.sh)"
 
 #Enable OpenGL to decrease electron CPU usage
-echo "dtoverlay=vc4-kms-v3d" >> /boot/config.txt
+#IMPORTANT!!!!
+echo "dtoverlay=vc4-fkms-v3d" >> /boot/config.txt #IMPORTNT!!!!! SWITCH TO FAKE KMS!!!!!!!!!!!!!!!
+#IMPORTANT!!!!!
 
 #Rotate display with OpenGL enabled
-echo "@xrandr --output HDMI-1 --rotate right" >> ~/.config/lxsession/LXDE-pi/autostart
+# DEPRECATED echo "@xrandr --output HDMI-1 --rotate right" >> ~/.config/lxsession/LXDE-pi/autostart
 
 #Disable low power wargings
-echo "avoid_warnings=1 " >> /boot/config.txt
+echo "display_rotate=1" >> /boot/config.txt
+#NOT IMPLEMENTED YET (DEBUGGING) echo "avoid_warnings=1 " >> /boot/config.txt
 
 #Install unclutter do Autohide Mouse Pointer
-sudo apt-get install unclutter
+apt-get install unclutter
 
 #Enalbe unclutter with 3 second disappearing delay
 echo "@unclutter -display :0 -idle 3 -root -noevents" >> ~/.config/lxsession/LXDE-pi/autostart
@@ -59,8 +62,8 @@ chmod -R 770 /var/www/html/
 
 #Install php
 apt install php php-mbstring
-rm /var/www/html/index.html
-echo "<?php phpinfo ();?>" > /var/www/html/index.php
+rm /var/www/html/index.html 
+echo "<?php phpinfo ();?>" > /var/www/html/index.php 
 
 #Install MySQL
 apt install mysql-server php-mysql
@@ -120,7 +123,7 @@ echo "hdmi_mode=46" >> /boot/config.txt
 
 #Chromium install for youtube (chrome-driver)
 echo "deb http://security.debian.org/debian-security stretch/updates main" >> /etc/apt/sources.list
-apt-get update && sudo apt-get upgrade
+apt-get update && apt-get upgrade
 
 apt-get install chromium
 apt-get install chromium-driver

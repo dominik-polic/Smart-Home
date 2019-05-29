@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -17,7 +18,6 @@ public class SendCommand extends AsyncTask<String, String, String> {
 
 
     private String parentActivity="MainActivity";
-    private String phpReturned;
     @SuppressLint("StaticFieldLeak")
     private MainActivity activity;
     SendCommand(MainActivity a) {
@@ -29,13 +29,12 @@ public class SendCommand extends AsyncTask<String, String, String> {
 
     protected String doInBackground(String... message) {
 
-    parentActivity=message[3];
+    parentActivity=message[2];
         String result="Executed";
 
 
         URL url = null;
-        String urltext="http://"+message[2]+"/writer_mysql.php?"+message[0]+"&user="+message[1];
-        String localIP = "192.168.1.20";
+        String urltext="http://polichousecontrol.ddns.net:1880/remote/command?"+message[0]+"&user="+message[1];
         try {
 
             url = new URL(urltext);
@@ -46,40 +45,34 @@ public class SendCommand extends AsyncTask<String, String, String> {
         HttpURLConnection urlConnection = null;
         try {
             urlConnection = (HttpURLConnection) (url != null ? url.openConnection() : null);
-            if(message[2].equals(localIP)) {
+
                 if (urlConnection != null) {
                     urlConnection.setConnectTimeout(1000);
                 }
-            }else{
-                if (urlConnection != null) {
-                    urlConnection.setConnectTimeout(3000);
-                }
-            }
-        } catch (java.net.SocketTimeoutException e) {
-            result="ERR: Timeout on LAN";
-        } catch (IOException e) {
-            e.printStackTrace();
-            result=e.toString();
-        }
-        try {
-            BufferedReader in = null;
+
+
+
+            InputStream in = null;
+            InputStreamReader isw;
             if (urlConnection != null) {
-                in = new BufferedReader(new InputStreamReader(
-                        urlConnection.getInputStream()));
-            }
-            String inputLine;
-            boolean first=true;
-            if (in != null) {
-                while ((inputLine = in.readLine()) != null)
-                    if(first) {
-                        phpReturned = inputLine;
-                        first=false;
-                    }
-            }
-            if(!phpReturned.equals("Success"))
-                result="PHP Error";
-            if (in != null) {
-                in.close();
+                in = urlConnection.getInputStream();
+                isw = new InputStreamReader(in);
+
+                int data = isw.read();
+                String response="";
+                while (data != -1) {
+                    char current = (char) data;
+                    data = isw.read();
+                    response+=current;
+                }
+
+
+
+                if (in != null) {
+                    in.close();
+                }
+            }else{
+                result = "PHP Error";
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -100,8 +93,6 @@ public class SendCommand extends AsyncTask<String, String, String> {
         Global.SendCommand_running=false;
         if (parentActivity.equals("MainActivity")) {
             if (!s.equals("Executed")) {
-                activity.retryWan();
-            } else if (!s.equals("Executed")) {
                 activity.displayToast(s);
             }
 

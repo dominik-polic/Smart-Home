@@ -11,9 +11,9 @@
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_field_required">This field is required</string>
-    <string name="logs_shortcut_short_label1">Logs</string>
-    <string name="logs_shortcut_long_label1">Show logs</string>
-    <string name="logs_disabled_message1">Please login to show logs</string>
+    <string name="logs_shortcut_short_label1">Web Interface</string>
+    <string name="logs_shortcut_long_label1">Show Web Interface</string>
+    <string name="logs_disabled_message1">Please login to show web interface</string>
     <string name="control_shortcut_short_label1">Controls</string>
     <string name="control_shortcut_long_label1">Show controls</string>
     <string name="control_disabled_message1">Please login to show controls</string>
@@ -37,7 +37,7 @@
         <item>White Fade</item>
         <item>Music Blink</item>
     </string-array>
-    <string name="title_activity_logs">Logs</string>
+    <string name="title_activity_logs">Web Interface</string>
     <string name="gates">Gates</string>
     <string name="close_car_gate">Close Car Gate</string>
     <string name="open_car_gate">Open Car gate</string>
