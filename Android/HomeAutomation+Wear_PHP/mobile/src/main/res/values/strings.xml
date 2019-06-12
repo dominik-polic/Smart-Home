@@ -67,5 +67,7 @@
     <string name="ring_a_bell">Ring a Bell</string>
     <string name="stop_server">Stop Server</string>
     <string name="reset_arduino">Reset Arduino</string>
+    <string name="appwidget_text">Basic controls</string>
+    <string name="add_widget">Add widget</string>
 
 </resources>

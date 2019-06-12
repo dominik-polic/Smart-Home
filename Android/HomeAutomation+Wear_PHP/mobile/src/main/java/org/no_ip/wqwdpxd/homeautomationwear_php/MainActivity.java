@@ -311,7 +311,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
         if(networkConnected()) {
             if(!Global.SendCommand_running) {
                 Global.SendCommand_running=true;
-                Log.d("DEBUG-DOMI",send_text);
+                //Log.d("DEBUG-DOMI",send_text);
                 new SendCommand(this).execute(send_text, user, "MainActivity");
             }
         }else{

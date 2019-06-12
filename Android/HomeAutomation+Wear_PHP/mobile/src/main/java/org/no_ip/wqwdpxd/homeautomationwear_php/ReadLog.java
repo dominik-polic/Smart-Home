@@ -52,13 +52,13 @@ public class ReadLog extends AsyncTask<String, String, String> {
                 if (urlConnection != null) {
 
 
-                    Log.d("DEBUG-READLOG","DEBUG1");
+                    //Log.d("DEBUG-READLOG","DEBUG1");
                     urlConnection.setConnectTimeout(3000);
 
                 }
 
 
-                Log.d("DEBUG-READLOG","DEBUG3");
+                //Log.d("DEBUG-READLOG","DEBUG3");
                 InputStream in = null;
                 InputStreamReader isw;
                 if (urlConnection != null) {
@@ -72,7 +72,7 @@ public class ReadLog extends AsyncTask<String, String, String> {
                         data = isw.read();
                         response += current;
                     }
-                    Log.d("DEBUG-READLOG",response);
+                    //Log.d("DEBUG-READLOG",response);
 
                     JSONObject reader = new JSONObject(response);
                     MainActivity.vswLight1State=reader.getString("light_livingroom_1").equals("on")?true:false;
