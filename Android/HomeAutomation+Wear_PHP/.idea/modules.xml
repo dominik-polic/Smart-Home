@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/HomeAutomation+Wear_PHP.iml" filepath="$PROJECT_DIR$/HomeAutomation+Wear_PHP.iml" />
+      <module fileurl="file://$PROJECT_DIR$/StringMon-unofficialtileapi/StringMon-unofficialtileapi.iml" filepath="$PROJECT_DIR$/StringMon-unofficialtileapi/StringMon-unofficialtileapi.iml" />
       <module fileurl="file://$PROJECT_DIR$/StringMon-unofficialtileapi-f7d62f0a4a72/StringMon-unofficialtileapi-f7d62f0a4a72.iml" filepath="$PROJECT_DIR$/StringMon-unofficialtileapi-f7d62f0a4a72/StringMon-unofficialtileapi-f7d62f0a4a72.iml" />
       <module fileurl="file://$PROJECT_DIR$/mobile/mobile.iml" filepath="$PROJECT_DIR$/mobile/mobile.iml" />
       <module fileurl="file://$PROJECT_DIR$/wear/wear.iml" filepath="$PROJECT_DIR$/wear/wear.iml" />

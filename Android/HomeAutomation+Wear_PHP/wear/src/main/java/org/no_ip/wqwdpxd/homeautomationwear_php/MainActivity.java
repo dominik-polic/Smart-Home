@@ -1,8 +1,10 @@
 package org.no_ip.wqwdpxd.homeautomationwear_php;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -25,11 +27,17 @@ public class MainActivity extends WearableActivity {
     private String nodeId;
     private SeekBar vsbLightD;
 
+    SharedPreferences pref;
+    SharedPreferences.Editor editor;
+    static String prefs = "dominik_polic_home_automation_prefs_WearOS";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        pref = getApplicationContext().getSharedPreferences(prefs, 0);
+        editor = pref.edit();
         setAmbientEnabled();
         initApi();
 
@@ -141,9 +149,17 @@ public class MainActivity extends WearableActivity {
 
     private void sendToast(final String poruka) {
         if (nodeId != null) {
+
+            pref = getApplicationContext().getSharedPreferences(prefs, 0);
+            editor = pref.edit();
+            editor.putString("nodeId", nodeId);
+            editor.apply();
+            Log.d("DEBUG","settings-saved nodeId: "+ pref.getString("nodeId","ERROR"));
+
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    Log.d("DEBUG","nodeId: " + nodeId);
                     client.blockingConnect(CONNECTION_TIME_OUT_MS, TimeUnit.MILLISECONDS);
                     Wearable.MessageApi.sendMessage(client, nodeId, poruka, null);
                     client.disconnect();

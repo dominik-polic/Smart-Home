@@ -4,10 +4,10 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "org.no_ip.wqwdpxd.homeautomationwear_php"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 27
-        versionCode 33
-        versionName "2.2.0-wear"
+        versionCode 34
+        versionName "2.3.0-wear"
     }
     buildTypes {
         release {
@@ -22,4 +22,5 @@ dependencies {
     implementation 'com.google.android.support:wearable:2.1.0'
     implementation 'com.google.android.gms:play-services-wearable:11.6.2'
     compileOnly 'com.google.android.wearable:wearable:2.1.0'
+    api project(path: ':StringMon-unofficialtileapi')
 }
