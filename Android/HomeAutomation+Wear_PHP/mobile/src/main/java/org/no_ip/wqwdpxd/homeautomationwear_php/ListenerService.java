@@ -1,12 +1,16 @@
 package org.no_ip.wqwdpxd.homeautomationwear_php;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.text.format.DateFormat;
 import android.util.Log;
 
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class ListenerService extends WearableListenerService {
 
@@ -36,18 +40,41 @@ public class ListenerService extends WearableListenerService {
 
 
         final SharedPreferences pref = getApplicationContext().getSharedPreferences(prefs, 0); // 0 - for private mode
-        final SharedPreferences.Editor editor = pref.edit();
+
         String user = pref.getString("username", "Unknown");
 
-        String logUser = pref.getString("username", "unknown");
+        String node = message.split("&")[0].split("=")[1];
+        String action = message.split("&")[1].split("=")[1];
 
 
-
-
-        if(logUser.equals(user1))
-            new SendCommand().execute(message, user,"ListenerService");
+        sendCommandFb(node,action,user);
 
     }
 
+    public void sendCommandFb(String node, String action, String user){
+
+        FirebaseDatabase myDb;
+        DatabaseReference dbRef_remote;
+        DatabaseReference dbRef_logs;
+        DatabaseReference dbRef_nodered;
+
+        myDb = FirebaseDatabase.getInstance();
+        dbRef_nodered = myDb.getReference("nodered");
+        dbRef_remote = myDb.getReference("remote");
+        dbRef_logs = myDb.getReference("logs");
+
+
+        //Send execution command
+        dbRef_remote.child(node).setValue(action);
+
+
+
+        //Add log
+        LogEntry logEntry = new LogEntry(action, node, user,"ANDROID_WEAR_OS");
+
+        dbRef_logs.child(DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString())
+                .child(DateFormat.format("hh:mm:ss", new java.util.Date()).toString()).setValue(logEntry);
+
+    }
 
 }

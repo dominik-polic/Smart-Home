@@ -9,9 +9,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
+
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 /**
  * Implementation of App Widget functionality.
@@ -70,9 +74,9 @@ public class GateOnlyWidget extends AppWidgetProvider {
         }else{
 
             if (clickBtnGateOpen.equals(intent.getAction())){
-                sendCommand("node=gate2&action=open",user,context);
+                sendCommandFb("gate_2","open",user,context);
             }else if (clickBtnGateClose.equals(intent.getAction())){
-                sendCommand("node=gate2&action=close",user,context);
+                sendCommandFb("gate_2","close",user,context);
             }
 
         }
@@ -80,16 +84,29 @@ public class GateOnlyWidget extends AppWidgetProvider {
 
     }
 
-    public void sendCommand(String send_text,String user, Context context){
-        if(networkConnected(context)) {
-            if(!Global.SendCommand_running) {
-                Global.SendCommand_running=true;
-                Log.d("DEBUG-DOMI",send_text);
-                new SendCommand().execute(send_text, user, "WidgetActivity");
-            }
-        }else{
-            displayToast("No network", context);
-        }
+    public void sendCommandFb(String node, String action,String user, Context context){
+        if(!networkConnected(context))
+            displayToast("No network",context);
+
+        FirebaseDatabase myDb;
+        DatabaseReference dbRef_remote;
+        DatabaseReference dbRef_logs;
+
+        myDb = FirebaseDatabase.getInstance();
+        dbRef_remote = myDb.getReference("remote");
+        dbRef_logs = myDb.getReference("logs");
+
+
+        //Send execution command
+        dbRef_remote.child(node).setValue(action);
+
+
+
+        //Add log
+        LogEntry logEntry = new LogEntry(action, node, user,"ANDROID_WIDGET");
+
+        dbRef_logs.child(DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString())
+                .child(DateFormat.format("hh:mm:ss", new java.util.Date()).toString()).setValue(logEntry);
 
     }
 

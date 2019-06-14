@@ -1,25 +1,19 @@
 package org.no_ip.wqwdpxd.homeautomationwear_php;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -36,15 +30,19 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.SeekBar;
-import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.Toast;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import android.text.format.DateFormat;
+import java.text.FieldPosition;
+import java.text.ParsePosition;
+import java.util.Date;
 
 
 public class MainActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
@@ -59,7 +57,6 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
     private Handler mHandler;
     public String useWeb="Unknown";
     public String user="Unknown";
-    public boolean first=true;
     private Switch vswHouseDoor;
     private Switch vswGate2;
     private Switch vswLight1;
@@ -68,16 +65,14 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
     private SeekBar vsbLightD;
     SharedPreferences pref;
     SharedPreferences.Editor editor;
-
-
-
+    private FirebaseDatabase myDb;
+    private DatabaseReference dbRef_nodered;
+    private DatabaseReference dbRef_remote;
+    private DatabaseReference dbRef_logs;
 
     String prefs;
-    static boolean vswLight1State;
-    static boolean vswLight2State;
-    static boolean vswGate2State;
-    static boolean vswHouseDoorState;
-    static int vsbLightDState;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +81,55 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+        //Connect to firebase
+        myDb = FirebaseDatabase.getInstance();
+        dbRef_nodered = myDb.getReference("nodered");
+        dbRef_remote = myDb.getReference("remote");
+        dbRef_logs = myDb.getReference("logs");
+        dbRef_nodered.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+
+                if (!networkConnected()) {
+                    displayToast("No network");
+                }
+                try {
+                    String light_livingroom_1_fb = dataSnapshot.child("light_livingroom_1").getValue().toString();
+                    //Log.d("DEBUG-TAG","Debug 1");
+                    String light_livingroom_2_fb = dataSnapshot.child("light_livingroom_2").getValue().toString();
+                    //Log.d("DEBUG-TAG","Debug 2");
+                    String light_dominik_fb = dataSnapshot.child("light_dominik").getValue().toString();
+                    //Log.d("DEBUG-TAG","Debug 3");
+                    String gate_2_fb = dataSnapshot.child("gate_2").getValue().toString();
+                    //Log.d("DEBUG-TAG","Debug 4");
+                    String door_house_fb = dataSnapshot.child("door_house").getValue().toString();
+                    //Log.d("DEBUG-TAG","Debug 5");
+
+                    vswLight1.setChecked(light_livingroom_1_fb.equals("on"));
+                    vswLight2.setChecked(light_livingroom_2_fb.equals("on"));
+                    vswGate2.setChecked(gate_2_fb.equals("close"));
+                    vswHouseDoor.setChecked(door_house_fb.equals("lock"));
+                    vsbLightD.setProgress(Integer.parseInt(light_dominik_fb));
+
+
+                } catch (NullPointerException e) {
+                    displayToast("ERROR: Firebase DB malfunction.");
+                    Log.e("FIREBASE", "NullPointerException, firebase format is wrong: " + e);
+                }
+
+
+            }
+
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.w("FIREBASE", "Failed to read value.", error.toException());
+            }
+        });
 
 
 
@@ -140,8 +184,8 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // do something, the isChecked will be
                 // true if the switch is in the On position
-                sendCommand("node=door_house&action="+(isChecked?"unlock":"lock"),user);
-                vswHouseDoorState=isChecked;
+                sendCommandFb("door_house",(isChecked?"lock":"unlock"),user);
+
             }
         });
 
@@ -149,8 +193,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // do something, the isChecked will be
                 // true if the switch is in the On position
-                sendCommand("node=gate2&action="+(isChecked?"open":"close"),user);
-                vswGate2State=isChecked;
+                sendCommandFb("gate_2",(isChecked?"close":"open"),user);
             }
         });
 
@@ -158,8 +201,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // do something, the isChecked will be
                 // true if the switch is in the On position
-                sendCommand("node=light_livingroom_1&action="+(isChecked?"on":"off"),user);
-                vswLight1State=isChecked;
+                sendCommandFb("light_livingroom_1",(isChecked?"on":"off"),user);
             }
         });
 
@@ -167,8 +209,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // do something, the isChecked will be
                 // true if the switch is in the On position
-                sendCommand("node=light_livingroom_2&action="+(isChecked?"on":"off"),user);
-                vswLight2State=isChecked;
+                sendCommandFb("light_livingroom_2",(isChecked?"on":"off"),user);
             }
         });
 
@@ -177,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
             @Override
             public void onClick(View v) {
-                sendCommand("node=gate1&action=open",user);
+                sendCommandFb("gate_1","open",user);
             }
         });
 
@@ -200,7 +241,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                sendCommand("node=light_dominik&action="+vsbLightD.getProgress(),user);
+                sendCommandFb("node=light_dominik",vsbLightD.getProgress(),user);
             }
         });
 
@@ -251,14 +292,12 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
 
 
-        getStatus();
 
 
 
 
-        sendCommand("connect",user);
+
         mHandler = new Handler();
-        startRepeatingTask();
 
         if(useWeb.equals("true")){
             Intent intent = new Intent(MainActivity.this, LogsActivity.class);
@@ -266,32 +305,8 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
         }
     }
 
-    void startRepeatingTask() {
-        mStatusChecker.run();
-    }
 
-    void stopRepeatingTask() {
-        mHandler.removeCallbacks(mStatusChecker);
-    }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        stopRepeatingTask();
-    }
-
-    Runnable mStatusChecker = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                getStatus();
-            } finally {
-                // 100% guarantee that this always happens, even if
-                // your update method throws an exception
-                mHandler.postDelayed(mStatusChecker, 500);
-            }
-        }
-    };
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -308,6 +323,9 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
     }
 
     public void sendCommand(String send_text,String user){
+        /*
+        DatabaseReference myRef = myDb.getReference("test1");
+        myRef.setValue(send_text);
         if(networkConnected()) {
             if(!Global.SendCommand_running) {
                 Global.SendCommand_running=true;
@@ -317,7 +335,21 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
         }else{
             displayToast("No network");
         }
+        */
+        displayToast("This function is deprecated, you should not be seeing this!");
+    }
 
+    private void sendCommandFb(String node, Object action, String user){
+        if(!networkConnected())
+            displayToast("No network!");
+
+        //Send execution command
+        dbRef_remote.child(node).setValue(action);
+
+        //Add log
+        LogEntry logEntry = new LogEntry(action, node, user);
+        dbRef_logs.child(DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString())
+                .child(DateFormat.format("hh:mm:ss", new java.util.Date()).toString()).setValue(logEntry);
     }
 
 
@@ -384,7 +416,8 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
                 return true;
 
             case R.id.menu_reload:
-                getStatus();
+                //getStatus();
+                displayToast("THIS OPTION IS DEPRECATED!");
                 return true;
 
 
@@ -493,73 +526,12 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
 
 
-    public void getStatus(){
-        updateValues();
-        if(networkConnected()) {
-            if(!Global.ReadLog_running){
-                Global.ReadLog_running=true;
-                new ReadLog(this).execute("status",user,"no_log","MainActivity");
-            }
-        }else{
-            displayToast("No network");
-        }
 
 
-    }
-    public void updateValues(){
-        vswLight1.setChecked(vswLight1State);
-        vswLight2.setChecked(vswLight2State);
-        vswGate2.setChecked(vswGate2State);
-        vswHouseDoor.setChecked(vswHouseDoorState);
-        vsbLightD.setProgress(vsbLightDState);
-
-    }
-
-
-
-
-    public void updatePermissionNetwork() {
-        Log.d("WIFI","updateNetworkPermission beginning");
-        if (android.os.Build.VERSION.SDK_INT >= 23) {
-            Log.d("WIFI","Version is above 23");
-            // Here, thisActivity is the current activity
-            if (ContextCompat.checkSelfPermission(this,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
-
-                Log.d("WIFI","Permission is denied :'(");
-                // Should we show an explanation?
-
-                /*if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION)) {
-
-                    // Show an explanation to the user *asynchronously* -- don't block
-                    // this thread waiting for the user's response! After the user
-                    // sees the explanation, try again to request the permission.
-
-                } else {*/
-
-                    // No explanation needed, we can request the permission.
-
-                    ActivityCompat.requestPermissions(this,
-                            new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                            PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-
-                    // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                    // app-defined int constant. The callback method gets the
-                    // result of the request.
-                //}
-            }else{
-                Log.d("WIFI","Permission is already granted?");
-            }
-
-
-        }
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String permissions[], @NonNull int[] grantResults) {
+                                           @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
                 // If request is cancelled, the result arrays are empty.
