@@ -10,6 +10,7 @@
     <string name="error_invalid_email">This email address is invalid</string>
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_incorrect_email">This account does not exist</string>
     <string name="error_field_required">This field is required</string>
     <string name="logs_shortcut_short_label1">Web Interface</string>
     <string name="logs_shortcut_long_label1">Show Web Interface</string>

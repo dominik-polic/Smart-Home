@@ -6,8 +6,8 @@ android {
         applicationId "org.no_ip.wqwdpxd.homeautomationwear_php"
         minSdkVersion 23
         targetSdkVersion 27
-        versionCode 34
-        versionName "2.3.0-wear"
+        versionCode 35
+        versionName "2.4.0-wear"
     }
     buildTypes {
         release {

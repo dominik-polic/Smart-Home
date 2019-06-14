@@ -38,6 +38,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import android.text.format.DateFormat;
 import java.text.FieldPosition;
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
     private Handler mHandler;
     public String useWeb="Unknown";
+    public String enableNotify="Unknown";
     public String user="Unknown";
     private Switch vswHouseDoor;
     private Switch vswGate2;
@@ -140,9 +142,19 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
         pref = getApplicationContext().getSharedPreferences(prefs, 0); // 0 - for private mode
         editor = pref.edit();
+        boolean temp_logout_once = pref.getBoolean("TEMP_LOGOUT_UPDATE_2019_6_15_a",false);
         boolean loggedIn = pref.getBoolean("login", false);
-        useWeb=pref.getString("use_web","false");
+        if (!temp_logout_once){
+            loggedIn = false;
+            editor.putBoolean("login",false);
+            editor.putBoolean("TEMP_LOGOUT_UPDATE_2019_6_15_a",true);
+            editor.apply();
+        }
 
+
+
+        useWeb=pref.getString("use_web","false");
+        enableNotify = pref.getString("enable_notify","true");
 
 
 
@@ -241,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                sendCommandFb("node=light_dominik",vsbLightD.getProgress(),user);
+                sendCommandFb("light_dominik",vsbLightD.getProgress(),user);
             }
         });
 
@@ -271,13 +283,13 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
                         break;
 
                     case 2:
-                        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.vMEyeSuper");
+                        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.LView");
                         if (launchIntent != null) {
                             startActivity(launchIntent);
                         }else{
                             mDrawerLayout.closeDrawers();
                             Intent intentLogs = new Intent(Intent.ACTION_VIEW);
-                            intentLogs.setData(Uri.parse("market://details?id=com.vMEyeSuper"));
+                            intentLogs.setData(Uri.parse("market://details?id=com.LView"));
                             startActivity(intentLogs);
                         }
 
@@ -299,6 +311,13 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
         mHandler = new Handler();
 
+
+        if(enableNotify.equals("true")){
+            updateNotificationSubscription(true);
+        }else{
+            updateNotificationSubscription(false);
+        }
+
         if(useWeb.equals("true")){
             Intent intent = new Intent(MainActivity.this, LogsActivity.class);
             startActivity(intent);
@@ -306,6 +325,12 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
     }
 
 
+    private void updateNotificationSubscription(boolean active){
+        if(active)
+            FirebaseMessaging.getInstance().subscribeToTopic("bell");
+        else
+            FirebaseMessaging.getInstance().unsubscribeFromTopic("bell");
+    }
 
 
     @Override
@@ -340,6 +365,15 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
     }
 
     private void sendCommandFb(String node, Object action, String user){
+
+        try {
+            action = action.toString();
+        }catch (NullPointerException e){
+            Log.e("FIREBASE","Error converting \"action\"Object to String");
+        }
+
+
+
         if(!networkConnected())
             displayToast("No network!");
 
@@ -370,6 +404,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
 
     public void displayToast(String text2){
+
         try {
             Context context = getApplicationContext();
             int duration = Toast.LENGTH_SHORT;
@@ -415,9 +450,19 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
                 displayToast("App version: " + versionName);
                 return true;
 
-            case R.id.menu_reload:
-                //getStatus();
-                displayToast("THIS OPTION IS DEPRECATED!");
+            case R.id.menu_NOTIFY:
+                enableNotify= pref.getString("enable_notify", "true");
+                if (enableNotify.equals("true")) {
+                    enableNotify="false";
+                    item.setChecked(false);
+                    updateNotificationSubscription(false);
+                } else {
+                    item.setChecked(true);
+                    enableNotify="true";
+                    updateNotificationSubscription(true);
+                }
+                editor.putString("enable_notify", enableNotify);
+                editor.commit();
                 return true;
 
 
@@ -451,6 +496,14 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.overflow, menu);
         MenuItem checkbox_WEB = menu.findItem(R.id.menu_WEB_DEFAULT);
+        MenuItem checkbox_NOTIFY = menu.findItem(R.id.menu_NOTIFY);
+
+        if(enableNotify.equals("true")){
+            checkbox_NOTIFY.setChecked(true);
+        }else{
+            checkbox_NOTIFY.setChecked(false);
+        }
+
         if(useWeb.equals("true"))
             checkbox_WEB.setChecked(true);
         else

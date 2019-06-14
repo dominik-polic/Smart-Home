@@ -5,10 +5,13 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.LoaderManager.LoaderCallbacks;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -18,6 +21,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -30,7 +34,19 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -40,23 +56,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     String localWiFi;
     String localIP;
     String wanIP;
-    String user1;
-    String user2;
-    String user3;
-    String user4;
-    String user5;
-    String user6;
-    String user1_login;
-    String user2_login;
-    String user3_login;
-    String user4_login;
-    String user5_login;
-    String user6_login;
 
 
 
 
-    String[] DUMMY_CREDENTIALS;
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -69,32 +72,72 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mLoginFormView;
     private String loguserid;
     CheckBox rememberLogin;
+    private FirebaseDatabase myDb;
+    private DatabaseReference dbRef_users;
+    private String all_users="UNDEFINED";
+    private HashMap<String,String> users_map = new HashMap<String,String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+
+
+
+        myDb = FirebaseDatabase.getInstance();
+        dbRef_users = myDb.getReference("users");
+        dbRef_users.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+
+                if (!networkConnected()) {
+                    displayToast("No network");
+                }
+                try {
+                    long user_count = dataSnapshot.getChildrenCount();
+                    all_users = dataSnapshot.getValue().toString();
+
+                    for (Integer i = 1; i<=user_count;i++){
+                        String id = i.toString();
+                        String email = dataSnapshot.child(id).child("email").getValue().toString();
+                        String username = dataSnapshot.child(id).child("username").getValue().toString();
+                        String password = dataSnapshot.child(id).child("password").getValue().toString();
+                        String FCM_token = dataSnapshot.child(id).child("FCM_token").getValue().toString();
+                        users_map.put(email,password+":"+id+":"+username+":"+FCM_token);
+                        Log.d("USERS-DB","Fetched user:"+email+", with data: "+users_map.get(email));
+                    }
+
+
+
+
+
+                } catch (NullPointerException e) {
+                    displayToast("ERROR: Firebase DB malfunction.");
+                    Log.e("FIREBASE", "NullPointerException, firebase format is wrong: " + e);
+                }
+
+
+            }
+
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.w("FIREBASE", "Failed to read value.", error.toException());
+            }
+        });
+
+
+
         prefs = getResources().getString(R.string.prefs);
         localWiFi = getResources().getString(R.string.localWiFi);
         localIP = getResources().getString(R.string.local_IP);
         wanIP = getResources().getString(R.string.wan_IP);
-        user1 = getResources().getString(R.string.user1);
-        user2 = getResources().getString(R.string.user2);
-        user3 = getResources().getString(R.string.user3);
-        user4 = getResources().getString(R.string.user4);
-        user5 = getResources().getString(R.string.user5);
-        user6 = getResources().getString(R.string.user6);
-        user1_login = getResources().getString(R.string.user1_login);
-        user2_login = getResources().getString(R.string.user2_login);
-        user3_login = getResources().getString(R.string.user3_login);
-        user4_login = getResources().getString(R.string.user4_login);
-        user5_login = getResources().getString(R.string.user5_login);
-        user6_login = getResources().getString(R.string.user6_login);
 
-        DUMMY_CREDENTIALS = new String[]{
-                user1_login,user2_login, user3_login,user4_login,user5_login,user6_login
-        };
+
 
         Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
@@ -146,7 +189,32 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
 
+    public boolean networkConnected() {
 
+        ConnectivityManager cm =
+                (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = null;
+        if (cm != null) {
+            activeNetwork = cm.getActiveNetworkInfo();
+        }
+
+
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
+
+
+    public void displayToast(String text2){
+        try {
+            Context context = getApplicationContext();
+            int duration = Toast.LENGTH_SHORT;
+
+            Toast toast = Toast.makeText(context, text2, duration);
+            toast.show();
+        }catch (Exception e){
+            Log.e("TOAST",e.getMessage());
+        }
+    }
 
     /**
      * Attempts to sign in or register the account specified by the login form.
@@ -299,6 +367,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         private final String mEmail;
         private final String mPassword;
+        private boolean wrongEmail = false;
 
         UserLoginTask(String email, String password) {
             mEmail = email;
@@ -308,20 +377,36 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         @Override
         protected Boolean doInBackground(Void... params) {
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    if(pieces[1].equals(mPassword)){
-                        loguserid=pieces[2];
-                        return true;
-                    }
-
-                }
+            //check email
+            if(!users_map.containsKey(mEmail)) {
+                wrongEmail = true;
+                return false;
             }
+            String userdata = users_map.get(mEmail);
+            String[] userdata_arr=userdata.split(":");
+            String password = userdata_arr[0];
+            String id = userdata_arr[1];
+            String username = userdata_arr[2];
+            String FCM_token_FB = userdata_arr[3];
+            //check password
+            if (!mPassword.equals(password))
+                return false;
 
 
-            return false;
+
+            //if login success, save data to preferences
+            SharedPreferences pref = getSharedPreferences(prefs, 0); // 0 - for private mode
+            SharedPreferences.Editor editor = pref.edit();
+            editor.putString("username", username);
+            editor.putString("user_id", id);
+            editor.putString("email", mEmail);
+            editor.apply();
+
+            //Update token for this user
+            String FCM_token = pref.getString("FCM_token",FCM_token_FB);
+            dbRef_users.child(id).child("FCM_token").setValue(FCM_token);
+
+            return true;
         }
 
         @Override
@@ -336,8 +421,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     updateLogin(loguserid);
                 }
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
+                if(wrongEmail){
+                    mEmailView.setError(getString(R.string.error_incorrect_email));
+                    mEmailView.requestFocus();
+                }else {
+                    mPasswordView.setError(getString(R.string.error_incorrect_password));
+                    mPasswordView.requestFocus();
+                }
             }
         }
 
@@ -351,7 +441,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             SharedPreferences pref = getSharedPreferences(prefs, 0); // 0 - for private mode
             SharedPreferences.Editor editor = pref.edit();
             editor.putBoolean("login", true);
-            editor.putString("username", userid);
             editor.apply();
 
 

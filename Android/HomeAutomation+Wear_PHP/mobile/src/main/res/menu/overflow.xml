@@ -14,11 +14,12 @@
         android:title="Use WEB as Default"
         android:icon="@android:drawable/ic_menu_preferences"
         android:checkable="true" />
-    <item
-        android:id="@+id/menu_reload"
+    <item android:id="@+id/menu_NOTIFY"
+        android:titleCondensed="Persist"
         android:orderInCategory="3"
-        app:showAsAction="never"
-        android:title="Reload"/>
+        android:title="Bell notification"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:checkable="true" />
     <item
         android:id="@+id/menu_about"
         android:orderInCategory="4"

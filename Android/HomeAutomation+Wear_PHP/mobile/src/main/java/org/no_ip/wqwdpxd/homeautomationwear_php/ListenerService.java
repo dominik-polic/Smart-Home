@@ -53,6 +53,12 @@ public class ListenerService extends WearableListenerService {
 
     public void sendCommandFb(String node, String action, String user){
 
+        try {
+            action = action.toString();
+        }catch (NullPointerException e){
+            Log.e("FIREBASE","Error converting \"action\"Object to String");
+        }
+
         FirebaseDatabase myDb;
         DatabaseReference dbRef_remote;
         DatabaseReference dbRef_logs;

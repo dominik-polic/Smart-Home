@@ -85,6 +85,13 @@ public class GateOnlyWidget extends AppWidgetProvider {
     }
 
     public void sendCommandFb(String node, String action,String user, Context context){
+
+        try {
+            action = action.toString();
+        }catch (NullPointerException e){
+            Log.e("FIREBASE","Error converting \"action\"Object to String");
+        }
+
         if(!networkConnected(context))
             displayToast("No network",context);
 

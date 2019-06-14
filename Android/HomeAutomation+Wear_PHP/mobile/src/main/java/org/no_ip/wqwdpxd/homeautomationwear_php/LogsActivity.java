@@ -30,6 +30,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.firebase.messaging.FirebaseMessaging;
+
 import java.util.ArrayList;
 
 public class LogsActivity extends AppCompatActivity {
@@ -98,13 +100,13 @@ public class LogsActivity extends AppCompatActivity {
                         break;
 
                     case 2:
-                        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.vMEyeSuper");
+                        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.com.LView");
                         if (launchIntent != null) {
                             startActivity(launchIntent);
                         }else{
                             mDrawerLayout.closeDrawers();
                             Intent intentLogs = new Intent(Intent.ACTION_VIEW);
-                            intentLogs.setData(Uri.parse("market://details?id=com.vMEyeSuper"));
+                            intentLogs.setData(Uri.parse("market://details?id=com.LView"));
                             startActivity(intentLogs);
                         }
 
@@ -193,6 +195,13 @@ public class LogsActivity extends AppCompatActivity {
 
     }
 
+    private void updateNotificationSubscription(boolean active){
+        if(active)
+            FirebaseMessaging.getInstance().subscribeToTopic("bell");
+        else
+            FirebaseMessaging.getInstance().unsubscribeFromTopic("bell");
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (mDrawerToggle.onOptionsItemSelected(item)) {
@@ -213,8 +222,19 @@ public class LogsActivity extends AppCompatActivity {
                 displayToast("App version: " + versionName);
                 return true;
 
-            case R.id.menu_reload:
-                webView.loadUrl("http://polichousecontrol.ddns.net:1880/ui");
+            case R.id.menu_NOTIFY:
+                String enableNotify= pref.getString("enable_notify", "false");
+                if (enableNotify.equals("true")) {
+                    enableNotify="false";
+                    item.setChecked(false);
+                    updateNotificationSubscription(false);
+                } else {
+                    item.setChecked(true);
+                    enableNotify="true";
+                    updateNotificationSubscription(true);
+                }
+                editor.putString("enable_notify", enableNotify);
+                editor.commit();
                 return true;
 
             case R.id.menu_WEB_DEFAULT:
