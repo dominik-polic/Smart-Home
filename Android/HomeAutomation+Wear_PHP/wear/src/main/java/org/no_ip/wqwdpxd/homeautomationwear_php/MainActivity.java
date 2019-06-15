@@ -1,45 +1,37 @@
 package org.no_ip.wqwdpxd.homeautomationwear_php;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.SeekBar;
-import android.widget.Spinner;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
-import com.google.android.gms.wearable.Wearable;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends WearableActivity {
-    public int brightness1=0,brightness2=0,speed3=0;
-    private static final long CONNECTION_TIME_OUT_MS = 2000;
 
-    private GoogleApiClient client;
-    private String nodeId;
     private SeekBar vsbLightD;
+    private FirebaseDatabase myDb;
+    private DatabaseReference dbRef_nodered;
+    private DatabaseReference dbRef_remote;
+    private DatabaseReference dbRef_logs;
 
-    SharedPreferences pref;
-    SharedPreferences.Editor editor;
-    static String prefs = "dominik_polic_home_automation_prefs_WearOS";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        pref = getApplicationContext().getSharedPreferences(prefs, 0);
-        editor = pref.edit();
+        myDb = FirebaseDatabase.getInstance();
+        dbRef_nodered = myDb.getReference("nodered");
+        dbRef_remote = myDb.getReference("remote");
+        dbRef_logs = myDb.getReference("logs");
+
+
         setAmbientEnabled();
-        initApi();
 
         vsbLightD = findViewById(R.id.sbLight);
 
@@ -59,7 +51,7 @@ public class MainActivity extends WearableActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                sendToast("node=light_dominik&action="+vsbLightD.getProgress());
+                sendCommandFb("light_dominik",vsbLightD.getProgress());
             }
         });
 
@@ -71,7 +63,26 @@ public class MainActivity extends WearableActivity {
 
 
 
+    private void sendCommandFb(String node, Object action){
+        String user = "wearos";
 
+        try {
+            action = action.toString();
+        }catch (NullPointerException e){
+            Log.e("FIREBASE","Error converting \"action\"Object to String");
+        }
+
+
+
+
+        //Send execution command
+        dbRef_remote.child(node).setValue(action);
+
+        //Add log
+        LogEntry logEntry = new LogEntry(action, node, user);
+        dbRef_logs.child(DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString())
+                .child(DateFormat.format("HH:mm:ss", new java.util.Date()).toString()).setValue(logEntry);
+    }
 
     @Override
     public void onEnterAmbient(Bundle ambientDetails) {
@@ -101,72 +112,25 @@ public class MainActivity extends WearableActivity {
 
 
     public void onGate2Open(View target) {
-        sendToast("node=gate2&action=open");
+        sendCommandFb("gate_2","open");
     }
     public void onGate2Close(View target) {
-        sendToast("node=gate2&action=close");
+        sendCommandFb("gate_2","close");
     }
     public void onGate1ShortOpen(View target) {
-        sendToast("node=gate1&action=pulse");
+        sendCommandFb("gate_1", "pulse");
     }
     public void onDoorHouseLock(View target) {
-        sendToast("node=door_house&action=lock");
+        sendCommandFb("door_house","lock");
     }
     public void onDoorHouseUnlock(View target) {
-        sendToast("node=door_house&action=unlock");
+        sendCommandFb("door_house","unlock");
     }
 
 
 
-    private void initApi() {
-        client = getGoogleApiClient(this);
-        retrieveDeviceNode();
-    }
 
 
 
-    private GoogleApiClient getGoogleApiClient(Context context) {
-        return new GoogleApiClient.Builder(context)
-                .addApi(Wearable.API)
-                .build();
-    }
-
-    private void retrieveDeviceNode() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                client.blockingConnect(CONNECTION_TIME_OUT_MS, TimeUnit.MILLISECONDS);
-                NodeApi.GetConnectedNodesResult result =
-                        Wearable.NodeApi.getConnectedNodes(client).await();
-                List<Node> nodes = result.getNodes();
-                if (nodes.size() > 0) {
-                    nodeId = nodes.get(0).getId();
-                }
-                client.disconnect();
-            }
-        }).start();
-    }
-
-    private void sendToast(final String poruka) {
-        if (nodeId != null) {
-
-            pref = getApplicationContext().getSharedPreferences(prefs, 0);
-            editor = pref.edit();
-            editor.putString("nodeId", nodeId);
-            editor.apply();
-            Log.d("DEBUG","settings-saved nodeId: "+ pref.getString("nodeId","ERROR"));
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d("DEBUG","nodeId: " + nodeId);
-                    client.blockingConnect(CONNECTION_TIME_OUT_MS, TimeUnit.MILLISECONDS);
-                    Wearable.MessageApi.sendMessage(client, nodeId, poruka, null);
-                    client.disconnect();
-
-                }
-            }).start();
-        }
-    }
 
 }

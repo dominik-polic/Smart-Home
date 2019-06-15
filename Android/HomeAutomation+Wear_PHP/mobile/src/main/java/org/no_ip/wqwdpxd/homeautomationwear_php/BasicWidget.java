@@ -139,7 +139,7 @@ public class BasicWidget extends AppWidgetProvider {
         LogEntry logEntry = new LogEntry(action, node, user,"ANDROID_WIDGET");
 
         dbRef_logs.child(DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString())
-                .child(DateFormat.format("hh:mm:ss", new java.util.Date()).toString()).setValue(logEntry);
+                .child(DateFormat.format("HH:mm:ss", new java.util.Date()).toString()).setValue(logEntry);
 
     }
 

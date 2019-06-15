@@ -100,7 +100,7 @@ public class LogsActivity extends AppCompatActivity {
                         break;
 
                     case 2:
-                        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.com.LView");
+                        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.LView");
                         if (launchIntent != null) {
                             startActivity(launchIntent);
                         }else{
