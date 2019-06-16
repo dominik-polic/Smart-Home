@@ -146,14 +146,8 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
         pref = getApplicationContext().getSharedPreferences(prefs, 0); // 0 - for private mode
         editor = pref.edit();
-        boolean temp_logout_once = pref.getBoolean("TEMP_LOGOUT_UPDATE_2019_6_15_a",false);
         boolean loggedIn = pref.getBoolean("login", false);
-        if (!temp_logout_once){
-            loggedIn = false;
-            editor.putBoolean("login",false);
-            editor.putBoolean("TEMP_LOGOUT_UPDATE_2019_6_15_a",true);
-            editor.apply();
-        }
+
 
 
 
