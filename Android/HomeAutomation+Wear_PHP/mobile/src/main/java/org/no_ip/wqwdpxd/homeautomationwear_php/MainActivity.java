@@ -99,25 +99,29 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
                     displayToast("No network");
                 }
                 try {
-                    String light_livingroom_1_fb = dataSnapshot.child("light_livingroom_1").getValue().toString();
-                    //Log.d("DEBUG-TAG","Debug 1");
-                    String light_livingroom_2_fb = dataSnapshot.child("light_livingroom_2").getValue().toString();
-                    //Log.d("DEBUG-TAG","Debug 2");
-                    String light_dominik_fb = dataSnapshot.child("light_dominik").getValue().toString();
-                    //Log.d("DEBUG-TAG","Debug 3");
-                    String gate_2_fb = dataSnapshot.child("gate_2").getValue().toString();
-                    //Log.d("DEBUG-TAG","Debug 4");
-                    String door_house_fb = dataSnapshot.child("door_house").getValue().toString();
-                    //Log.d("DEBUG-TAG","Debug 5");
 
-                    vswLight1.setChecked(light_livingroom_1_fb.equals("on"));
-                    vswLight2.setChecked(light_livingroom_2_fb.equals("on"));
-                    vswGate2.setChecked(gate_2_fb.equals("close"));
-                    vswHouseDoor.setChecked(door_house_fb.equals("lock"));
-                    vsbLightD.setProgress(Integer.parseInt(light_dominik_fb));
+                    if(dataSnapshot.getKey().equals("nodered")) {
+                        Log.d("DEBUG","Processing key: "+dataSnapshot.getKey());
 
+                        String light_livingroom_1_fb = dataSnapshot.child("light_livingroom_1").getValue().toString();
+                        //Log.d("DEBUG-TAG","Debug 1");
+                        String light_livingroom_2_fb = dataSnapshot.child("light_livingroom_2").getValue().toString();
+                        //Log.d("DEBUG-TAG","Debug 2");
+                        String light_dominik_fb = dataSnapshot.child("light_dominik").getValue().toString();
+                        //Log.d("DEBUG-TAG","Debug 3");
+                        String gate_2_fb = dataSnapshot.child("gate_2").getValue().toString();
+                        //Log.d("DEBUG-TAG","Debug 4");
+                        String door_house_fb = dataSnapshot.child("door_house").getValue().toString();
+                        //Log.d("DEBUG-TAG","Debug 5");
 
-                } catch (NullPointerException e) {
+                        vswLight1.setChecked(light_livingroom_1_fb.equals("on"));
+                        vswLight2.setChecked(light_livingroom_2_fb.equals("on"));
+                        vswGate2.setChecked(gate_2_fb.equals("close"));
+                        vswHouseDoor.setChecked(door_house_fb.equals("lock"));
+                        vsbLightD.setProgress(Integer.parseInt(light_dominik_fb));
+                    }
+
+                } catch (Exception e) {
                     displayToast("ERROR: Firebase DB malfunction.");
                     Log.e("FIREBASE", "NullPointerException, firebase format is wrong: " + e);
                 }

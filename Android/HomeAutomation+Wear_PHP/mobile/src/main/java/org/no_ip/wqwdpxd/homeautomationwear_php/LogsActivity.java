@@ -43,8 +43,9 @@ public class LogsActivity extends AppCompatActivity {
 
     SharedPreferences pref;
     SharedPreferences.Editor editor;
-    public String user="Unknown";
-    public String useWeb="Unknown";
+    private String user="Unknown";
+    private String useWeb="Unknown";
+    private String enableNotify="Unknown";
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
@@ -71,7 +72,7 @@ public class LogsActivity extends AppCompatActivity {
         }
         user=pref.getString("username","Unknown");
         useWeb=pref.getString("use_web","false");
-
+        enableNotify = pref.getString("enable_notify","true");
 
         Toolbar myToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(myToolbar);
@@ -131,6 +132,12 @@ public class LogsActivity extends AppCompatActivity {
         webView.getSettings().setDomStorageEnabled(true);
         webView.loadUrl("http://polichousecontrol.ddns.net:1880/ui");
         //webView.loadUrl("https://google.com");
+
+        if(enableNotify.equals("true")){
+            updateNotificationSubscription(true);
+        }else{
+            updateNotificationSubscription(false);
+        }
     }
 
     @Override
@@ -223,7 +230,7 @@ public class LogsActivity extends AppCompatActivity {
                 return true;
 
             case R.id.menu_NOTIFY:
-                String enableNotify= pref.getString("enable_notify", "false");
+                enableNotify= pref.getString("enable_notify", "true");
                 if (enableNotify.equals("true")) {
                     enableNotify="false";
                     item.setChecked(false);
