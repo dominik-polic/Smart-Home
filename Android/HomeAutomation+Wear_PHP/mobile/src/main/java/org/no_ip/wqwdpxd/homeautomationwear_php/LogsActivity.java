@@ -294,10 +294,17 @@ public class LogsActivity extends AppCompatActivity {
         inflater.inflate(R.menu.overflow, menu);
 
         MenuItem checkbox_WEB = menu.findItem(R.id.menu_WEB_DEFAULT);
+        MenuItem checkbox_NOTIFY = menu.findItem(R.id.menu_NOTIFY);
         if(useWeb.equals("true"))
             checkbox_WEB.setChecked(true);
         else
             checkbox_WEB.setChecked(false);
+
+        if(enableNotify.equals("true"))
+            checkbox_NOTIFY.setChecked(true);
+        else
+            checkbox_NOTIFY.setChecked(false);
+
 
 
 
