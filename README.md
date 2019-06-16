@@ -18,4 +18,50 @@ The rest of the code for my smart home project can be found in the [new reposito
 
 These are some of the features of the Android App:
 
-TODO - ADD FEATURES LATER
+### Login screen
+Fully functional login screen, storing user credentials and data in a Firebase Database
+
+![image](docs/images/android-login.png)
+
+
+### Control screen
+A basic control screen, design is stilla work in progress, but backend is fully implemented. If you have a working internet connection actions are almost instant, meaning that, for example, light turns on within about 200ms when you press a button.
+
+![image](docs/images/android-app.png)
+
+
+### Web interface
+Basically a NodeRED dashboard displayed in app. More functions and better design, but slow to load, therefore this will be removed once the in-app control screen is finished.
+
+![image](docs/images/android-web.png)
+
+
+### Notifications
+Currently, the only implemented notification is the one that activates when someone rings a bell, showing you the preview image from a security camera pointing at the bell. You can enable/disable this notification in-app or by disabling dedicated notification channel in Android O and later.
+
+
+![image](docs/images/android-notification.png)
+
+Clicking on a notification opens up a quick preview with basic options to open the gate. Everything works, but the design is not finished yet.
+
+![image](docs/images/android-preview.png)
+
+
+### Widgets
+Currently, there are 2 basic widgets, one only for opening/losing the car gate, and one also including my room light switch. The widget allows you to simply open the gate from your home screen without opening the app, which is what we use the app for the most.
+
+![image](docs/images/android-widgetchooser.png)
+
+
+### Other
+Other features include:
+ - Quick settings
+ - App shortcuts
+ - Notification channels
+ - App sidebar
+ - Adaptive icon
+ - Wear OS companion app
+ - Wear OS quick tile
+ 
+ 
+![image](docs/images/android-quicksettings.png) ![image](docs/images/android-shortcuts.png) ![image](docs/images/android-sidebar.png) ![image](docs/images/android-shortcuts.png) ![image](docs/images/wear-app.png) ![image](docs/images/wear-tile.png)
