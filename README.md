@@ -64,4 +64,4 @@ Other features include:
  - Wear OS quick tile
  
  
-![image](docs/images/android-quicksettings.png) ![image](docs/images/android-sidebar.png) ![image](docs/images/android-shortcuts.png) ![image](docs/images/wear-app.png) ![image](docs/images/wear-tile.png)
+![image](docs/images/android-sidebar.png) ![image](docs/images/android-quicksettings.png) ![image](docs/images/android-shortcuts.png) ![image](docs/images/wear-app.png) ![image](docs/images/wear-tile.png)
