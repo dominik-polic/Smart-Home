@@ -85,18 +85,9 @@ public class Gate2Tile extends TileService {
     public void onStartListening() {
         super.onStartListening();
 
+        if(checkConditions(this))
+            updateStateListener();
 
-        updateStateListener();
-
-
-        Tile tile = getQsTile();
-
-        if(!networkConnected(this)) {
-            tile.setState(Tile.STATE_UNAVAILABLE);
-            tile.setLabel("No network");
-            tile.setIcon(Icon.createWithResource(this,R.drawable.light_off));
-            tile.updateTile();
-        }
 
     }
 
@@ -106,6 +97,33 @@ public class Gate2Tile extends TileService {
     }
 
 
+    public boolean checkConditions(Context context){
+        if(!networkConnected(context)) {
+            Tile tile = getQsTile();
+            tile.setState(Tile.STATE_UNAVAILABLE);
+            tile.setLabel("No network");
+            tile.setIcon(Icon.createWithResource(context,R.drawable.gate_close));
+            tile.updateTile();
+            return false;
+        }
+
+        SharedPreferences pref;
+        String prefs = getResources().getString(R.string.prefs);
+        pref = getApplicationContext().getSharedPreferences(prefs, 0);
+        boolean loggedIn = pref.getBoolean("login", false);
+        if(!loggedIn){
+            Tile tile = getQsTile();
+            tile.setState(Tile.STATE_UNAVAILABLE);
+            tile.setLabel("Not logged in");
+            tile.setIcon(Icon.createWithResource(context,R.drawable.gate_close));
+            tile.updateTile();
+            return false;
+        }
+
+        return true;
+
+    }
+
 
 
     public void updateStateListener(){
@@ -114,7 +132,7 @@ public class Gate2Tile extends TileService {
         String prefs = getResources().getString(R.string.prefs);
         pref = getApplicationContext().getSharedPreferences(prefs, 0);
         String user=pref.getString("username","Unknown");
-
+        boolean loggedIn = pref.getBoolean("login", false);
 
         FirebaseDatabase myDb;
         DatabaseReference dbRef_nodered;
@@ -127,32 +145,32 @@ public class Gate2Tile extends TileService {
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
                 Log.d("TILE-LISTENER","Data received: "+dataSnapshot.toString());
+                if(checkConditions(getApplicationContext())) {
+                    try {
+                        String currentState = (String) dataSnapshot.getValue().toString();
+                        Log.d("TILE-LISTENER", "currentState:" + currentState);
+                        if (currentState.equals("close")) {
+                            Log.d("TILE-LISTENER", "SET TO STATE_ACTIVE");
+                            Tile tile = getQsTile();
+                            tile.setState(Tile.STATE_ACTIVE);
+                            tile.setLabel("Open gate");
+                            tile.setIcon(Icon.createWithResource(getApplicationContext(), R.drawable.gate_open));
+                            tile.updateTile();
+                        } else {
+                            Log.d("TILE-LISTENER", "SET TO STATE_INACTIVE");
+                            Tile tile = getQsTile();
+                            tile.setState(Tile.STATE_INACTIVE);
+                            tile.setLabel("Close gate");
+                            tile.setIcon(Icon.createWithResource(getApplicationContext(), R.drawable.gate_close));
+                            tile.updateTile();
+                        }
 
-                try {
-                    String currentState = (String) dataSnapshot.getValue().toString();
-                    Log.d("TILE-LISTENER","currentState:"+currentState);
-                    if(currentState.equals("close")){
-                        Log.d("TILE-LISTENER","SET TO STATE_ACTIVE");
-                        Tile tile = getQsTile();
-                        tile.setState(Tile.STATE_ACTIVE);
-                        tile.setLabel("Open gate");
-                        tile.setIcon(Icon.createWithResource(getApplicationContext(),R.drawable.gate_open));
-                        tile.updateTile();
-                    }else{
-                        Log.d("TILE-LISTENER","SET TO STATE_INACTIVE");
-                        Tile tile = getQsTile();
-                        tile.setState(Tile.STATE_INACTIVE);
-                        tile.setLabel("Close gate");
-                        tile.setIcon(Icon.createWithResource(getApplicationContext(),R.drawable.gate_close));
-                        tile.updateTile();
+
+                    } catch (Exception e) {
+                        Log.e("FIREBASE", "Exception, firebase format is wrong: " + e);
                     }
 
-
-
-                } catch (Exception e) {
-                    Log.e("FIREBASE", "Exception, firebase format is wrong: " + e);
                 }
-
 
             }
 

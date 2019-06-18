@@ -90,18 +90,8 @@ public class LightDominkTile extends TileService {
     public void onStartListening() {
         super.onStartListening();
 
-
-        updateStateListener();
-
-
-        Tile tile = getQsTile();
-
-        if(!networkConnected(this)) {
-            tile.setState(Tile.STATE_UNAVAILABLE);
-            tile.setLabel("No network");
-            tile.setIcon(Icon.createWithResource(this,R.drawable.light_off));
-            tile.updateTile();
-        }
+        if(checkConditions(this))
+            updateStateListener();
 
     }
 
@@ -136,7 +126,7 @@ public class LightDominkTile extends TileService {
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
                 Log.d("TILE-LISTENER", "Data received: " + dataSnapshot.toString());
-                if(networkConnected(getApplicationContext())){
+                if(checkConditions(getApplicationContext())){
                     try {
                         String currentState = (String) dataSnapshot.getValue().toString();
                         Log.d("TILE-LISTENER", "currentState:" + currentState);
@@ -172,6 +162,33 @@ public class LightDominkTile extends TileService {
                 Log.w("FIREBASE", "Failed to read value.", error.toException());
             }
         });
+    }
+
+    public boolean checkConditions(Context context){
+        if(!networkConnected(context)) {
+            Tile tile = getQsTile();
+            tile.setState(Tile.STATE_UNAVAILABLE);
+            tile.setLabel("No network");
+            tile.setIcon(Icon.createWithResource(context,R.drawable.light_off));
+            tile.updateTile();
+            return false;
+        }
+
+        SharedPreferences pref;
+        String prefs = getResources().getString(R.string.prefs);
+        pref = getApplicationContext().getSharedPreferences(prefs, 0);
+        boolean loggedIn = pref.getBoolean("login", false);
+        if(!loggedIn){
+            Tile tile = getQsTile();
+            tile.setState(Tile.STATE_UNAVAILABLE);
+            tile.setLabel("Not logged in");
+            tile.setIcon(Icon.createWithResource(context,R.drawable.light_off));
+            tile.updateTile();
+            return false;
+        }
+
+        return true;
+
     }
 
     public boolean networkConnected(Context context) {
