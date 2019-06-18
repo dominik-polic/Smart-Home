@@ -70,6 +70,28 @@
             </intent-filter>
         </service>
 
+        <service
+            android:name=".LightDominkTile"
+            android:icon="@drawable/light_on"
+            android:label="Room Light"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".Gate2Tile"
+            android:icon="@drawable/gate_open"
+            android:label="Car Gate"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".LogsActivity"
             android:label="@string/title_activity_logs"
