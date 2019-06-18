@@ -21,6 +21,8 @@ import com.google.firebase.database.ValueEventListener;
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class LightDominkTile extends TileService {
 
+    private static String ORIGIN = "ANDROID-TILE-LIGHT";
+
     @Override
     public void onClick() {
         super.onClick();
@@ -36,45 +38,15 @@ public class LightDominkTile extends TileService {
 
         //Execute action based on current state and user
         if(user.equals("dominik"))
-            sendCommandFb("light_dominik",(tile.getState()==Tile.STATE_ACTIVE)?"0":"255",user);
+            ActionSender.sendCommandFb("light_dominik",(tile.getState()==Tile.STATE_ACTIVE)?"0":"255",user,this,ORIGIN);
         else if(user.equals("hrvoje"))
-            sendCommandFb("light_hrvoje",(tile.getState()==Tile.STATE_ACTIVE)?"off":"on",user);
+            ActionSender.sendCommandFb("light_hrvoje",(tile.getState()==Tile.STATE_ACTIVE)?"off":"on",user,this,ORIGIN);
         else
-            sendCommandFb("light_livingroom_1",(tile.getState()==Tile.STATE_ACTIVE)?"off":"on",user);
+            ActionSender.sendCommandFb("light_livingroom_1",(tile.getState()==Tile.STATE_ACTIVE)?"off":"on",user,this,ORIGIN);
 
         //REDUNDANT updateStateListener();
     }
 
-    public void sendCommandFb(String node, String action,String user){
-        Log.d("SEND-COMMAND","Sending to node: "+node+", action: "+action);
-
-        try {
-            action = action.toString();
-        }catch (NullPointerException e){
-            Log.e("FIREBASE","Error converting \"action\"Object to String");
-        }
-
-        FirebaseDatabase myDb;
-        DatabaseReference dbRef_remote;
-        DatabaseReference dbRef_logs;
-
-        myDb = FirebaseDatabase.getInstance();
-        dbRef_remote = myDb.getReference("remote");
-        dbRef_logs = myDb.getReference("logs");
-
-
-        //Send execution command
-        dbRef_remote.child(node).setValue(action);
-
-
-
-        //Add log
-        LogEntry logEntry = new LogEntry(action, node, user,"ANDROID_TILE");
-
-        dbRef_logs.child(DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString())
-                .child(DateFormat.format("HH:mm:ss", new java.util.Date()).toString()).setValue(logEntry);
-
-    }
 
     @Override
     public void onTileAdded() {
@@ -165,7 +137,7 @@ public class LightDominkTile extends TileService {
     }
 
     public boolean checkConditions(Context context){
-        if(!networkConnected(context)) {
+        if(!ActionSender.networkConnected(context)) {
             Tile tile = getQsTile();
             tile.setState(Tile.STATE_UNAVAILABLE);
             tile.setLabel("No network");
@@ -191,19 +163,7 @@ public class LightDominkTile extends TileService {
 
     }
 
-    public boolean networkConnected(Context context) {
 
-        ConnectivityManager cm =
-                (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = null;
-        if (cm != null) {
-            activeNetwork = cm.getActiveNetworkInfo();
-        }
-
-
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-    }
 
 
 

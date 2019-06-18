@@ -47,7 +47,7 @@ public class ImageActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                sendCommandFb("gate_2","open","notification",ImageActivity.this);
+                ActionSender.sendCommandFb("gate_2","open","notification",ImageActivity.this,"ANDROID-BELL");
             }
         });
 
@@ -56,7 +56,7 @@ public class ImageActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                sendCommandFb("gate_1","pulse","notification",ImageActivity.this);
+                ActionSender.sendCommandFb("gate_1","pulse","notification",ImageActivity.this,"ANDROID-BELL");
             }
         });
 
@@ -71,66 +71,6 @@ public class ImageActivity extends AppCompatActivity {
         new DownloadImageTask((ImageView) findViewById(R.id.imageView)).execute("http://polichousecontrol.ddns.net:8001/snap.jpg");
     }
 
-    public void sendCommandFb(String node, String action,String user, Context context){
-
-        try {
-            action = action.toString();
-        }catch (NullPointerException e){
-            Log.e("FIREBASE","Error converting \"action\"Object to String");
-        }
-
-        if(!networkConnected(context))
-            displayToast("No network",context);
-
-        FirebaseDatabase myDb;
-        DatabaseReference dbRef_remote;
-        DatabaseReference dbRef_logs;
-
-        myDb = FirebaseDatabase.getInstance();
-        dbRef_remote = myDb.getReference("remote");
-        dbRef_logs = myDb.getReference("logs");
-
-
-        //Send execution command
-        dbRef_remote.child(node).setValue(action);
-
-
-
-        //Add log
-        LogEntry logEntry = new LogEntry(action, node, user,"ANDROID_NOTIFICATION");
-
-        dbRef_logs.child(DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString())
-                .child(DateFormat.format("HH:mm:ss", new java.util.Date()).toString()).setValue(logEntry);
-
-    }
-
-
-    public boolean networkConnected(Context context) {
-
-        ConnectivityManager cm =
-                (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = null;
-        if (cm != null) {
-            activeNetwork = cm.getActiveNetworkInfo();
-        }
-
-
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-    }
-
-
-
-    public void displayToast(String text2, Context context){
-        try {
-            int duration = Toast.LENGTH_SHORT;
-
-            Toast toast = Toast.makeText(context, text2, duration);
-            toast.show();
-        }catch (Exception e){
-            Log.e("TOAST",e.getMessage());
-        }
-    }
 
 
 

@@ -27,7 +27,7 @@ public class BasicWidget extends AppWidgetProvider {
     private static final String clickBtnGateClose = "W_B_GCLOSE";
     private static final String clickBtnLightOn = "W_B_LON";
     private static final String clickBtnLightOff = "W_B_LOFF";
-
+    private static String ORIGIN = "ANDROID-WIDGET-BASIC";
 
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
@@ -77,17 +77,17 @@ public class BasicWidget extends AppWidgetProvider {
 
         Log.d("WIDGET","DEBUG_CLICK, user: "+user);
         if(user.equals("Unknown")||user.equals("Not_important")) {
-            displayToast("Please login in APP first!", context);
+            ActionSender.displayToast("Please login in APP first!", context);
         }else{
 
             if (clickBtnLightOff.equals(intent.getAction())){
-                sendCommandFb("light_dominik",0,user,context);
+                ActionSender.sendCommandFb("light_dominik",0,user,context,ORIGIN);
             }else if (clickBtnLightOn.equals(intent.getAction())){
-                sendCommandFb("light_dominik",255,user,context);
+                ActionSender.sendCommandFb("light_dominik",255,user,context,ORIGIN);
             }else if (clickBtnGateOpen.equals(intent.getAction())){
-                sendCommandFb("gate_2","open",user,context);
+                ActionSender.sendCommandFb("gate_2","open",user,context,ORIGIN);
             }else if (clickBtnGateClose.equals(intent.getAction())){
-                sendCommandFb("gate_2","close",user,context);
+                ActionSender.sendCommandFb("gate_2","close",user,context,ORIGIN);
             }
 
         }
@@ -106,70 +106,6 @@ public class BasicWidget extends AppWidgetProvider {
     }
 
 
-
-
-    public void sendCommandFb(String node, Object action,String user, Context context){
-
-        try {
-            action = action.toString();
-        }catch (NullPointerException e){
-            Log.e("FIREBASE","Error converting \"action\"Object to String");
-        }
-
-        if(!networkConnected(context))
-            displayToast("No network",context);
-
-        FirebaseDatabase myDb;
-        DatabaseReference dbRef_remote;
-        DatabaseReference dbRef_logs;
-        DatabaseReference dbRef_nodered;
-
-        myDb = FirebaseDatabase.getInstance();
-        dbRef_nodered = myDb.getReference("nodered");
-        dbRef_remote = myDb.getReference("remote");
-        dbRef_logs = myDb.getReference("logs");
-
-
-        //Send execution command
-        dbRef_remote.child(node).setValue(action);
-
-
-
-        //Add log
-        LogEntry logEntry = new LogEntry(action, node, user,"ANDROID_WIDGET");
-
-        dbRef_logs.child(DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString())
-                .child(DateFormat.format("HH:mm:ss", new java.util.Date()).toString()).setValue(logEntry);
-
-    }
-
-
-    public boolean networkConnected(Context context) {
-
-        ConnectivityManager cm =
-                (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = null;
-        if (cm != null) {
-            activeNetwork = cm.getActiveNetworkInfo();
-        }
-
-
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-    }
-
-
-
-    public void displayToast(String text2, Context context){
-        try {
-            int duration = Toast.LENGTH_SHORT;
-
-            Toast toast = Toast.makeText(context, text2, duration);
-            toast.show();
-        }catch (Exception e){
-            Log.e("TOAST",e.getMessage());
-        }
-    }
 
 
 }

@@ -21,6 +21,8 @@ import com.google.firebase.database.ValueEventListener;
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class Gate2Tile extends TileService {
 
+    private static String ORIGIN = "ANDROID-TILE-GATE2";
+
     @Override
     public void onClick() {
         super.onClick();
@@ -35,41 +37,11 @@ public class Gate2Tile extends TileService {
 
 
         //Execute action based on current state and user
-        sendCommandFb("gate_2",(tile.getState()==Tile.STATE_ACTIVE)?"open":"close",user);
+        ActionSender.sendCommandFb("gate_2",(tile.getState()==Tile.STATE_ACTIVE)?"open":"close",user, getApplicationContext(),ORIGIN);
 
         //REDUNDANT updateStateListener();
     }
 
-    public void sendCommandFb(String node, String action,String user){
-        Log.d("SEND-COMMAND","Sending to node: "+node+", action: "+action);
-
-        try {
-            action = action.toString();
-        }catch (NullPointerException e){
-            Log.e("FIREBASE","Error converting \"action\"Object to String");
-        }
-
-        FirebaseDatabase myDb;
-        DatabaseReference dbRef_remote;
-        DatabaseReference dbRef_logs;
-
-        myDb = FirebaseDatabase.getInstance();
-        dbRef_remote = myDb.getReference("remote");
-        dbRef_logs = myDb.getReference("logs");
-
-
-        //Send execution command
-        dbRef_remote.child(node).setValue(action);
-
-
-
-        //Add log
-        LogEntry logEntry = new LogEntry(action, node, user,"ANDROID_TILE");
-
-        dbRef_logs.child(DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString())
-                .child(DateFormat.format("HH:mm:ss", new java.util.Date()).toString()).setValue(logEntry);
-
-    }
 
     @Override
     public void onTileAdded() {

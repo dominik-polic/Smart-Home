@@ -32,7 +32,7 @@ public class FCMReceiver extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
 
-        if(remoteMessage.getFrom().equals("/topics/bell")) {
+        if(remoteMessage.getFrom().equals("/topics/bell")||true) {
             try {
                 Log.d("DEBUG","TAG1");
                 String title = remoteMessage.getData().get("title");
@@ -56,6 +56,27 @@ public class FCMReceiver extends FirebaseMessagingService {
                 builder.setSound(sounduri);
                 builder.setSmallIcon(R.drawable.bell);
                 builder.setChannelId(CH_BELL_ID);
+
+                //Add open car gate button
+                String ACTION_GATE2 = "MY_BROADCAST_RECEIVER_OPEN_GATE_2";
+
+                Intent openCarGateIntent = new Intent(this, MyBroadcastReceiver.class);
+                openCarGateIntent.setAction(ACTION_GATE2);
+                openCarGateIntent.putExtra("OPEN_GATE2", 0);
+                PendingIntent openCarGatePendingIntent =
+                        PendingIntent.getBroadcast(this, 0, openCarGateIntent, 0);
+
+                builder.addAction(R.drawable.gate_open,"Open car gate",openCarGatePendingIntent);
+
+
+                String ACTION_GATE1 = "MY_BROADCAST_RECEIVER_OPEN_GATE_1";
+
+                Intent openMenGateIntent = new Intent(this, MyBroadcastReceiver.class);
+                openMenGateIntent.setAction(ACTION_GATE1);
+                openMenGateIntent.putExtra("OPEN_GATE1", 0);
+                PendingIntent openMenGatePendingIntent =
+                        PendingIntent.getBroadcast(this, 0, openMenGateIntent, 0);
+                builder.addAction(R.drawable.small_gate,"Small gate",openMenGatePendingIntent);
 
                 Log.d("DEBUG","TAG2");
                 ImageRequest imageRequest = new ImageRequest(picture, new Response.Listener<Bitmap>() {

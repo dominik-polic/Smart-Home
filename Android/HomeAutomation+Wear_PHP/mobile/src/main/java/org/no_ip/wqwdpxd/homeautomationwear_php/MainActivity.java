@@ -71,6 +71,8 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
     private DatabaseReference dbRef_nodered;
     private DatabaseReference dbRef_remote;
     private DatabaseReference dbRef_logs;
+    private static String ORIGIN = "ANDROID-APP";
+
 
     String prefs;
 
@@ -95,8 +97,8 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
 
-                if (!networkConnected()) {
-                    displayToast("No network");
+                if (! ActionSender.networkConnected(getApplicationContext())) {
+                    ActionSender.displayToast("No network",getApplicationContext());
                 }
                 try {
 
@@ -122,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
                     }
 
                 } catch (Exception e) {
-                    displayToast("ERROR: Firebase DB malfunction.");
+                    ActionSender.displayToast("ERROR: Firebase DB malfunction.",getApplicationContext());
                     Log.e("FIREBASE", "NullPointerException, firebase format is wrong: " + e);
                 }
 
@@ -194,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // do something, the isChecked will be
                 // true if the switch is in the On position
-                sendCommandFb("door_house",(isChecked?"lock":"unlock"),user);
+                ActionSender.sendCommandFb("door_house",(isChecked?"lock":"unlock"),user,getApplicationContext(),ORIGIN);
 
             }
         });
@@ -203,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // do something, the isChecked will be
                 // true if the switch is in the On position
-                sendCommandFb("gate_2",(isChecked?"close":"open"),user);
+                ActionSender.sendCommandFb("gate_2",(isChecked?"close":"open"),user,getApplicationContext(),ORIGIN);
             }
         });
 
@@ -211,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // do something, the isChecked will be
                 // true if the switch is in the On position
-                sendCommandFb("light_livingroom_1",(isChecked?"on":"off"),user);
+                ActionSender.sendCommandFb("light_livingroom_1",(isChecked?"on":"off"),user,getApplicationContext(),ORIGIN);
             }
         });
 
@@ -219,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // do something, the isChecked will be
                 // true if the switch is in the On position
-                sendCommandFb("light_livingroom_2",(isChecked?"on":"off"),user);
+                ActionSender.sendCommandFb("light_livingroom_2",(isChecked?"on":"off"),user,getApplicationContext(),ORIGIN);
             }
         });
 
@@ -228,7 +230,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
             @Override
             public void onClick(View v) {
-                sendCommandFb("gate_1","open",user);
+                ActionSender.sendCommandFb("gate_1","open",user,getApplicationContext(),ORIGIN);
             }
         });
 
@@ -251,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                sendCommandFb("light_dominik",vsbLightD.getProgress(),user);
+                ActionSender.sendCommandFb("light_dominik",vsbLightD.getProgress(),user,getApplicationContext(),ORIGIN);
             }
         });
 
@@ -359,60 +361,10 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
             displayToast("No network");
         }
         */
-        displayToast("This function is deprecated, you should not be seeing this!");
-    }
-
-    private void sendCommandFb(String node, Object action, String user){
-
-        try {
-            action = action.toString();
-        }catch (NullPointerException e){
-            Log.e("FIREBASE","Error converting \"action\"Object to String");
-        }
-
-
-
-        if(!networkConnected())
-            displayToast("No network!");
-
-        //Send execution command
-        dbRef_remote.child(node).setValue(action);
-
-        //Add log
-        LogEntry logEntry = new LogEntry(action, node, user);
-        dbRef_logs.child(DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString())
-                .child(DateFormat.format("HH:mm:ss", new java.util.Date()).toString()).setValue(logEntry);
+        ActionSender.displayToast("This function is deprecated, you should not be seeing this!",this);
     }
 
 
-    public boolean networkConnected() {
-
-        ConnectivityManager cm =
-                (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = null;
-        if (cm != null) {
-            activeNetwork = cm.getActiveNetworkInfo();
-        }
-
-
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-    }
-
-
-
-    public void displayToast(String text2){
-
-        try {
-            Context context = getApplicationContext();
-            int duration = Toast.LENGTH_SHORT;
-
-            Toast toast = Toast.makeText(context, text2, duration);
-            toast.show();
-        }catch (Exception e){
-            Log.e("TOAST",e.getMessage());
-        }
-    }
 
     public void updateLogin(){
 
@@ -445,7 +397,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
                 }
-                displayToast("App version: " + versionName);
+                ActionSender.displayToast("App version: " + versionName,this);
                 return true;
 
             case R.id.menu_NOTIFY:
