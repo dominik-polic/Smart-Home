@@ -52,6 +52,19 @@ Currently, there are 2 basic widgets, one only for opening/losing the car gate, 
 
 ![image](docs/images/android-widgetchooser.png)
 
+### Quick settings Tiles
+Similar to widgets, currently 2 tiles are available, one for light and one for gate. As opposed to widgets, the tiles reflect the actual current state of these nodes and update when clicked or the node is changed from another source.
+
+![image](docs/images/android-qs-example.jpg)
+
+The tiles are only available if you are logged in and have an active internet connection, otherwise they are disabled. 
+
+![image](docs/images/android-qs-nologin.jpg) ![image](docs/images/android-qs-nonetwork.jpg) 
+
+The tiles can be very useful if made easily accessible
+
+![image](docs/images/android-qs-small.jpg)
+
 
 ### Other
 Other features include:
