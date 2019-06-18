@@ -32,7 +32,7 @@ public class FCMReceiver extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
 
-        if(remoteMessage.getFrom().equals("/topics/bell")||true) {
+        if(remoteMessage.getFrom().equals("/topics/bell")) {
             try {
                 Log.d("DEBUG","TAG1");
                 String title = remoteMessage.getData().get("title");
