@@ -37,7 +37,7 @@ Basically a NodeRED dashboard displayed in app. More functions and better design
 
 
 ### Notifications
-Currently, the only implemented notification is the one that activates when someone rings a bell, showing you the preview image from a security camera pointing at the bell. You can enable/disable this notification in-app or by disabling dedicated notification channel in Android O and later.
+Currently, the only implemented notification is the one that activates when someone rings a bell, showing you the preview image from a security camera pointing at the bell and basic action buttons for opening the gates. You can enable/disable this notification in-app or by disabling dedicated notification channel in Android O and later.
 
 
 ![image](docs/images/android-notification.png)
