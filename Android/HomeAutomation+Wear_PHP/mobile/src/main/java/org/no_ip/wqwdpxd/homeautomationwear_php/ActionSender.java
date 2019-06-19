@@ -1,6 +1,7 @@
 package org.no_ip.wqwdpxd.homeautomationwear_php;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.text.format.DateFormat;
@@ -14,6 +15,14 @@ public class ActionSender {
 
     public static void sendCommandFb(String node, Object action,String user, Context context, String origin){
 
+        String prefs = context.getResources().getString(R.string.prefs);
+        final SharedPreferences pref = context.getSharedPreferences(prefs, 0); // 0 - for private mode
+        user=pref.getString("username", "Unknown");
+
+        if(user.equals("filip")){
+            displayToast("Zalim, nebi islo :/",context);
+            return;
+        }
         try {
             action = action.toString();
         }catch (NullPointerException e){

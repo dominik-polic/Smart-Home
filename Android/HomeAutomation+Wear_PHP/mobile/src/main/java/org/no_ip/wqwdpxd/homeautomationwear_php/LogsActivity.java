@@ -55,6 +55,8 @@ public class LogsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
         setContentView(R.layout.activity_logs);
 
         webView= (WebView) findViewById(R.id.webview);
@@ -63,6 +65,8 @@ public class LogsActivity extends AppCompatActivity {
 
         pref = getApplicationContext().getSharedPreferences(prefs, 0); // 0 - for private mode
         editor = pref.edit();
+        user=pref.getString("username","Unknown");
+
         boolean loggedIn = pref.getBoolean("login", false);
         if(!loggedIn) {
             displayToast("Please login first.");
@@ -70,7 +74,10 @@ public class LogsActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         }
-        user=pref.getString("username","Unknown");
+
+        if(user.equals("filip"))
+                finish();
+
         useWeb=pref.getString("use_web","false");
         enableNotify = pref.getString("enable_notify","true");
 

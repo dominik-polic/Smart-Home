@@ -81,7 +81,7 @@ public class LightDominkTile extends TileService {
         String prefs = getResources().getString(R.string.prefs);
         pref = getApplicationContext().getSharedPreferences(prefs, 0);
         String user=pref.getString("username","Unknown");
-        String selectedLight = "light_livingrooom_1";
+        String selectedLight = "light_livingroom_1";
         if(user.equals("dominik"))
             selectedLight = "light_dominik";
         else if(user.equals("hrvoje"))

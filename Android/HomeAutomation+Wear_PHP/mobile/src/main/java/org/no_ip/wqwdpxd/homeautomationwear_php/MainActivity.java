@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.drm.DrmStore;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -326,6 +327,12 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
 
     private void updateNotificationSubscription(boolean active){
+        if(user.equals("filip")){
+            ActionSender.displayToast("NEMOZE :/",this);
+            FirebaseMessaging.getInstance().unsubscribeFromTopic("bell");
+            return;
+        }
+
         if(active)
             FirebaseMessaging.getInstance().subscribeToTopic("bell");
         else
