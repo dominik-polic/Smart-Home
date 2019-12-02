@@ -1,5 +1,5 @@
 # Smart-Home
-This is a repository containg old version of Aarduino and Raspberry Pi programs I previously used in my home automation system. 
+This is a repository containing old version of Aarduino and Raspberry Pi programs I previously used in my home automation system. 
 
 The Android App is still updated, and it's open source, but it's also available on [Google Play Store](https://play.google.com/store/apps/details?id=org.no_ip.wqwdpxd.homeautomationwear_php), but only for my personal use currently. 
 
